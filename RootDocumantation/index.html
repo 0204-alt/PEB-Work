@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head><meta name="peb-version" content="V11.9-UNIFIED-PIPELINE-FIX">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PEB Design & Estimation Master Software V11.9 — Unified Calculation Pipeline</title>
+<style>
+*{box-sizing:border-box}html,body{width:100%;height:100%;overflow:hidden}body{margin:0;font-family:Arial,Segoe UI,sans-serif;background:#eef2f6;color:#172536;font-size:12px}
+.top{height:58px;background:#072941;color:#fff;display:flex;align-items:center;padding:0 12px;gap:14px}.logo{font-size:22px;font-weight:800;line-height:.8}.logo span{display:block;font-size:10px;letter-spacing:.3px}.v{color:#70d5e7;font-weight:700}.tools{display:flex;gap:15px;height:100%;align-items:center}.tool{text-align:center;font-size:8px}.tool b{display:block;font-size:17px;font-weight:400}.right{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:10px}.right select{width:58px;height:23px}
+.app{display:grid;grid-template-columns:105px 225px minmax(0,1fr) 205px;height:calc(100vh - 58px);min-height:0}
+.nav{background:#092f50;color:#fff;overflow:auto}.nav div{padding:11px 5px;border-bottom:1px solid #174565;text-align:center;font-size:9px}.nav .sel{background:#0c659b}.nav i{display:block;font-style:normal;font-size:17px;margin-bottom:3px}
+.left,.rightpanel{background:#fff;padding:9px;overflow:auto;border-right:1px solid #cbd6e0}.rightpanel{border-left:1px solid #cbd6e0;border-right:0}h3{margin:0 -1px 7px;color:#0b527f;border-bottom:2px solid #dbe4ec;padding:5px 3px;font-size:11px}
+label{display:block;font-size:9px;font-weight:700;margin:5px 0 2px;color:#425568}input,select{width:100%;height:25px;border:1px solid #c8d4df;border-radius:3px;padding:3px 5px;font-size:10px;background:#fff}.row{display:grid;grid-template-columns:1fr 1fr;gap:6px}.span-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.span-grid label{margin-top:4px}.span-grid input{background:#f7fafc}.note{line-height:1.35}
+.btn{width:100%;height:29px;border:0;border-radius:3px;background:#116ca5;color:#fff;font-weight:700;margin-top:7px}.btn.green{background:#16815e}.mode{display:grid;grid-template-columns:1fr 1fr;gap:5px}.mode button{height:25px;border:1px solid #c9d5df;background:#fff;font-size:9px}.mode .on{background:#176b9f;color:#fff}
+.chk{display:grid;grid-template-columns:1fr 1fr;gap:2px}.chk label{font-weight:400;margin:2px 0}.chk input{width:auto;height:auto}
+.center{padding:9px;display:flex;flex-direction:column;overflow:hidden;min-width:0;min-height:0}.views{height:32px;flex:0 0 32px;display:flex;gap:4px;min-width:0;overflow:auto}.views button{border:1px solid #cbd6e0;background:#fff;padding:0 10px;font-size:9px}.views .active{background:#e7f1f8;color:#07598b}.canvaswrap{flex:1 1 auto;min-height:260px;height:auto;background:#fff;border:1px solid #ccd7e1;position:relative;overflow:hidden}.canvaswrap canvas{display:block;width:100%;height:100%}
+.bottom{height:265px;min-height:220px;flex:0 0 265px;display:grid;grid-template-columns:1.55fr 1fr 1.25fr 1fr;gap:5px;margin-top:6px}.box{background:#fff;border:1px solid #cbd6df;overflow:auto}.box h3{background:#f3f7fa;padding:5px;margin:0;border:0}.box table{width:100%;border-collapse:collapse;font-size:8px}.box th{background:#0b4e78;color:#fff;padding:4px;text-align:left;position:sticky;top:0}.box td{padding:3px;border-bottom:1px solid #e2e7ec}.total{font-weight:800;background:#f2f6f9}.note{padding:5px;font-size:8px;color:#647585}
+.card{border:1px solid #d1dbe4;margin-bottom:7px}.card h3{background:#0c5688;color:#fff;padding:6px;margin:0;border:0}.card .body{padding:6px}.prop{display:flex;justify-content:space-between;border-bottom:1px dotted #d5dee6;padding:4px 0;font-size:9px}.prop b{font-weight:700}.ok{color:#08784f}.warn{color:#a66a00}
+.formula{font-family:Consolas,monospace;font-size:8px;background:#f6f8fa;padding:5px;margin-top:4px;white-space:pre-wrap}
+ .nav div,.tool,.views button{cursor:pointer}.nav div:hover,.tool:hover{background:#114e72}.toast{position:fixed;right:18px;bottom:18px;background:#082d49;color:#fff;padding:10px 14px;border-radius:5px;box-shadow:0 4px 18px rgba(0,0,0,.25);z-index:99;font-size:11px}.sectionFocus{outline:2px solid #1b78ad;outline-offset:2px}
+#craneSpanMode,#craneGirderType{width:100%;margin:3px 0 7px}
+#craneCapacity,#craneBracketLevel,#craneSelfWeight,#craneTrolleyWeight,#craneImpact{width:100%;margin:3px 0 7px}
+@media(max-width:1250px){.app{grid-template-columns:88px 210px minmax(0,1fr) 190px}.top{gap:9px}.tools{gap:9px}.logo{font-size:19px}}
+@media(max-height:760px){.bottom{height:220px;min-height:190px;flex-basis:220px}.canvaswrap{min-height:210px}.left,.rightpanel{padding:7px}.nav div{padding:8px 4px}.bottom .box table{font-size:7px}}
+
+#runwayBeamSection,#runwayBeamWeight,#estRunway,#estRunwayLength,#estRunwayWt,#craneBridgeSpan,#craneBridgeQty,#craneRunwayWidth,#craneSupportLines{display:none!important}
+</style>
+</head>
+<body>
+<div class="top">
+<div class="logo">PEB <span>DESIGN & ESTIMATION<br>MASTER SOFTWARE</span></div><div class="v">V11.9</div>
+<div class="tools"><div class=tool><b>＋</b>NEW</div><div class=tool><b>▣</b>OPEN</div><div class=tool><b>▤</b>SAVE</div><div class=tool><b>⇩</b>IMPORT</div><div class=tool><b>⇧</b>EXPORT</div><div class=tool><b>▤</b>REPORT</div><div class=tool><b>☷</b>BOQ</div><div class=tool><b>▥</b>DRAWING</div></div>
+<div class=right>Weight <select><option>KG</option><option>MT</option></select> Currency <select><option>INR</option><option>USD</option></select> Project: <b id=projectTitle>STANDARD FACTORY BUILDING</b> ⚙ ?</div>
+</div>
+<div class=app>
+<nav class=nav id="nav">
+<div class=sel data-target="dashboard"><i>⌂</i>DASHBOARD</div>
+<div data-target="model"><i>◈</i>3D MODEL</div><div data-target="building"><i>⌂</i>BUILDING</div>
+<div data-target="mainframe"><i>Π</i>MAIN FRAME</div><div data-target="secondary"><i>≋</i>SECONDARY</div>
+<div data-target="bracing"><i>⚒</i>BRACING</div><div data-target="crane"><i>▤</i>CRANE</div>
+<div data-target="mezz"><i>▥</i>MEZZANINE</div><div data-target="canopy"><i>⌂</i>CANOPY</div>
+<div data-target="openings"><i>□</i>OPENINGS</div><div data-target="plates"><i>▣</i>PLATES & CONN.</div>
+<div data-target="baseplate"><i>⌑</i>BASE PLATE</div><div data-target="estimate"><i>≡</i>ESTIMATE</div>
+<div data-target="boq"><i>☷</i>BOQ</div><div data-target="drawing"><i>▧</i>DRAWING</div>
+<div data-target="report"><i>☰</i>REPORT</div><div data-target="settings"><i>⚙</i>SETTINGS</div>
+</nav>
+<section class=left>
+<h3 id="building">BUILDING CONFIGURATION</h3>
+<label>Building Type</label><select id=type><option>Warehouse</option><option>Multi-Span Factory</option><option>EOT Crane Building</option><option>Heavy Industrial Building</option><option>Single Span PEB</option><option>Lean-To + Main Shed</option></select>
+<div class=row><div><label>Length (m)</label><input id=L value=175></div><div><label>Width (m)</label><input id=W value=120></div></div>
+<div class=row><div><label>Eave Height (m)</label><input id=H value=9.5></div><div><label>Bay Spacing (m)</label><input id=bay value=6.00 readonly></div></div>
+<label>No. of Spans (Width) — AUTO/SELECTOR</label><input id=nspan value=2 type=number min=1 max=5>
+<div id=spanInputs class=span-grid></div>
+<label>No. of Bays (Length) — AUTO FROM LOADS</label><input id=nbay value=13 type=number min=1 readonly>
+<label>Roof Slope — AUTO STANDARD</label><select id=slope disabled><option value=10>1:10</option><option value=20>1:20</option><option value=8>1:8</option><option value=5>1:5</option></select>
+<div class=note id=autoRuleNote>Auto rule: bay count/spacing is a preliminary planning rule using dead + live + wind demand. Roof slope follows the selected building/roof-system standard; loads are used for member design, not to invent a structural slope.</div>
+
+<h3 id="dashboard">DESIGN LOCATION & WIND</h3>
+<label>India Location</label><select id=location></select>
+<div class=row><div><label>Basic Wind Speed Vb (m/s)</label><input id=vb readonly></div><div><label>Wind Pressure (kN/m²)</label><input id=pz readonly></div></div>
+<div class=row><div><label>Terrain Category</label><select id=terrain><option value=1>Cat 1 - Open</option><option value=.85>Cat 2 - Suburban</option><option value=.75 selected>Cat 3 - Urban</option><option value=.70>Cat 4 - Dense</option></select></div><div><label>Topography k3</label><input id=k3 value=1.00></div></div>
+<div class=row><div><label>Risk k1</label><input id=k1 value=1.00></div><div><label>Height/Terrain k2</label><input id=k2 value=1.00></div></div>
+
+<h3 id="loadsInput">DESIGN LOADS</h3>
+<div class=row><div><label>Roof Dead Load (kN/m²)</label><input id=dl value=0.15></div><div><label>Roof Live Load (kN/m²)</label><input id=ll value=0.57></div></div>
+<div class=row><div><label>Collateral Load (kN/m²)</label><input id=collateral value=0.20></div><div><label>Crane Impact Factor</label><input id=impact value=1.10></div></div>
+<div class=row><div><label>PEB Frame-Action Coefficient (preliminary)</label><input id=pebFrameCoeff value=0.15 step=0.01></div><div><label>Design Deflection Vertical (L/x)</label><input id=vDefl value=180></div></div>
+<div class=row><div><label>Seismic Zone</label><select id=seismic><option>I</option><option>II</option><option>III</option><option selected>IV</option><option>V</option></select></div><div><label>Brick Wall Height (m)</label><input id=brickH value=3.0></div></div>
+<div class=row><div><label>Brick Wall Length (m)</label><input id=brickL value=285></div><div><label>Brick Wall Line Load (kN/m)</label><input id=brickLoad value=13.8></div></div>
+<div class=row><div><label>Roof Sheeting Thickness (mm)</label><input id=roofThk value=0.55 step=0.01></div><div><label>Wall Cladding Thickness (mm)</label><input id=wallThk value=0.50 step=0.01></div></div>
+<div class=row><div><label>Mezzanine Area (m²)</label><input id=mezzArea value=0></div><div><label>Mezzanine DL / LL (kN/m²)</label><input id=mezzLoad value="0.50 / 2.50"></div></div>
+<div class=row><div><label>Canopy Area (m²)</label><input id=canopyArea value=0></div><div><label>Canopy DL (kN/m²)</label><input id=canopyDL value=0.25></div></div>
+<div class=row><div><label>Practical Estimate Mode</label><select id=estimateMode onchange="calculate()"><option value="engineering">Engineering-derived weight</option><option value="practical" selected>Practical PEB calibrated</option></select></div><div><label>Benchmark Target (MT, optional)</label><input id=benchmarkTarget value="717.255" step="0.001" oninput="applyBenchmarkLive()"></div></div>
+<div class=row><div><label>Steel Benchmark (kg/m², optional)</label><input id=benchmarkKgSqm value="34.155" step="0.001" inputmode="decimal" oninput="benchmarkChanged()"><div class=note>ENTER 25 / 30 / 40 etc. → Building Weight = kg/m² × Building Area. In Practical PEB mode this is the COMPLETE BUILDING WEIGHT target.</div></div><div><label>Auto Benchmark Weight (MT)</label><input id=benchmarkAutoMT value="717.255" readonly><button type="button" class="btn" style="margin-top:6px" onclick="benchmarkChanged()">APPLY BENCHMARK</button></div></div>
+<div class=note><b>LIVE BENCHMARK LINK:</b> Practical PEB mode uses Steel Benchmark (kg/m²) as the COMPLETE BUILDING GRAND TOTAL. At 21,000 m²: 25 = 525 MT, 30 = 630 MT, 34.155 = 717.255 MT, 40 = 840 MT.</div><div class=note><b>Calibration:</b> Benchmark is used only to tune the preliminary weight estimate; it never changes load effects or member strength checks. Final design remains governed by analysis and applicable codes.</div>
+<div class=note><b>V11.9:</b> Crane loads affect only designated crane-supporting column lines. Column and rafter sections are selected independently from DL + LL + wind + applicable crane demand; connection geometry remains standardized for bolting compatibility.</div>
+<div class=note><b>Disclaimer:</b> This software provides preliminary PEB sizing and estimation. Final design shall be verified by STAAD.Pro / structural analysis and applicable IS/AISC design checks.</div>
+
+<h3 id="mainframe">MAIN FRAME AUTO DESIGN</h3>
+<label>Column Design Method</label><select id=colMethod><option>Auto Built-Up I</option><option>Straight I Section</option><option>Universal Section</option></select>
+<label>Rafter Design Method</label><select id=rafMethod><option>Auto Built-Up I</option><option>Straight I Section</option><option>Haunched Built-Up I</option></select>
+<div class=chk><label><input id=crane type=checkbox> Crane</label><label><input id=mezz type=checkbox> Mezzanine</label><label><input checked type=checkbox> Purlins</label><label><input checked type=checkbox> Girts</label><label><input checked type=checkbox> Base Plate</label><label><input checked type=checkbox> Connection Plates</label></div>
+<button class=btn onclick=calculate()>CALCULATE & GENERATE MODEL ↻</button>
+<button class="btn green" onclick=exportCSV()>EXPORT DESIGN DATA CSV</button>
+<button class="btn" style="background:#7b4db3" onclick=exportSTAAD()>GENERATE & EXPORT STAAD .STD</button>
+<button class="btn" style="background:#9a5a00" onclick=exportPDF()>EXPORT COMPLETE PDF REPORT</button>
+<button class="btn" style="background:#455a64" onclick=saveProjectFile()>SAVE COMPLETE PROJECT</button>
+<input id=projectFile type=file accept=".json" style="display:none" onchange=loadProjectFile(event)>
+</section>
+
+<main class=center>
+<div class=views><button class=active onclick=mode('3D',this)>3D MODEL</button><button onclick=mode('2D',this)>2D MODEL</button><button onclick=view('PLAN',this)>PLAN</button><button onclick=view('FRONT',this)>FRONT</button><button onclick=view('SIDE',this)>SIDE</button><button onclick=view('ISO',this)>ISOMETRIC</button><button onclick=zoom(1.1)>⌕+</button><button onclick=zoom(.9)>⌕−</button><button onclick=fit()>⌗</button></div>
+<div class=canvaswrap><canvas id=cv></canvas></div>
+<div class=bottom><div class=box id=members></div><div class=box id=plates></div><div class=box id=loads></div><div class=box id=estimate></div></div>
+</main>
+
+<aside class=rightpanel>
+<div class=card><h3 id="model">MODEL PROPERTIES</h3><div class=body id=props></div></div>
+<div class=card><h3>AUTO MAIN FRAME DESIGN</h3><div class=body id=design></div></div>
+<div class=card><h3 id="crane">CRANE LOAD ON BUILDING — NO CRANE EQUIPMENT IN BUILDING WEIGHT</h3><div class=body>
+<label><input id=craneOn type=checkbox> Crane ON</label>
+<label>Crane Capacity (MT)</label><input id=cap value=10>
+<div class=row><div><label>Crane Self Weight (kN)</label><input id=craneSelfWeight value=80></div><div><label>Trolley / Hoist (kN)</label><input id=craneTrolleyWeight value=20></div></div>
+<div class=row><div><label>No. of Wheels</label><input id=craneWheels value=4 min=2></div><div><label>Impact Factor</label><input id=impact value=1.10></div></div>
+<div class=row><div><label>Longitudinal Factor</label><input id=craneLongFactor value=0.10></div><div><label>Transverse Factor</label><input id=craneTransFactor value=0.10></div></div>
+<div class=note><b>Purpose:</b> Crane capacity/self-weight is converted only into load effects on the building columns/rafters. Crane girder, runway, rail, wheel and crane equipment are <b>NOT included</b> in building steel weight.</div>
+</div></div>
+<div class=card><h3 id="plates">CONNECTION MATCHING</h3><div class=body id=conn></div></div>
+<div class=card><h3>BASE PLATE & ANCHOR BOLT</h3><div class=body>
+<div class=prop><span>Factored Vertical Reaction</span><b id=anchorR>—</b></div>
+<div class=prop><span>Wind Moment</span><b id=anchorM>—</b></div>
+<div class=prop><span>Anchor Arrangement</span><b id=anchorArr>—</b></div>
+<div class=prop><span>Anchor Diameter</span><b id=anchorDia>—</b></div>
+<div class=prop><span>Anchor Quantity</span><b id=anchorQty>—</b></div>
+<div class=prop><span>Embedment</span><b id=anchorEmb>—</b></div>
+<div class=formula id=anchorFormula>—</div></div></div>
+<div class=card><h3 id="report">DESIGN BASIS</h3><div class=body><div class=formula>Wind: Vz = Vb × k1 × k2 × k3
+Wind pressure: pz = 0.6 × Vz²
+Frame tributary width = bay spacing
+Member selection: independent column/rafter demand screening for DL + LL + wind; crane effects only on crane-supporting columns.
+Section screening considers axial + bending, slenderness/effective-length assumptions and deflection/serviceability triggers.
+Connection geometry is standardized where practical for bolting interchangeability.
+Applicable Indian Standards and final STAAD analysis govern final design.</div><div class=note>For final structural design, code clauses, load combinations, section stability, buckling, serviceability, connections, crane loads and foundations must be checked by a qualified structural engineer.</div></div></div>
+</aside>
+</div>
+
+<script>
+const cityData={
+"Agra":47,"Ahmedabad":39,"Ajmer":47,"Almora":39,"Amritsar":30,"Asansol":47,"Aurangabad":39,"Bahraich":50,"Bengaluru":33,"Barauni":47,"Bareilly":50,"Bhatinda":47,"Bhilai":44,"Bhopal":47,"Bhubaneshwar":50,"Bhuj":50,"Bikaner":47,"Bokaro":39,"Chandigarh":50,"Chennai":50,"Coimbatore":39,"Cuttack":50,"Darbhanga":47,"Darjeeling":47,"Dehra Dun":39,"Delhi":50,"Durgapur":41,"Gangtok":47,"Guwahati":50,"Gaya":39,"Gorakhpur":47,"Hyderabad":44,"Imphal":44,"Jabalpur":39,"Jaipur":47,"Neemrana":47,"Jamshedpur":47,"Jhansi":47,"Jodhpur":47,"Kanpur":47,"Kohima":44,"Kolkata":50,"Kozhikode":39,"Kurnool":39,"Lakshadweep":39,"Lucknow":50,"Ludhiana":50,"Madurai":39,"Mandi":39,"Mangaluru":39,"Moradabad":50,"Mumbai":44,"Mysuru":33,"Nagpur":44,"Nainital":47,"Nasik":39,"Nellore":50,"Panaji":39,"Patiala":50,"Patna":41,"Puducherry":50,"Port Blair":44,"Pune":39,"Raipur":44,"Rajkot":39,"Ranchi":39,"Roorkee":50,"Rourkela":39,"Shimla":39,"Srinagar":39,"Surat":44,"Tiruchirappalli":47,"Thiruvananthapuram":39,"Udaipur":47,"Vadodara":39,"Varanasi":47,"Vijayawada":50,"Visakhapatnam":50};
+let loc=$('location');Object.keys(cityData).sort().forEach(c=>{let o=document.createElement('option');o.textContent=c;o.value=c;loc.appendChild(o)});loc.value='Neemrana';
+
+let D={mode:'3D',view:'ISO',z:1};
+function $(id){return document.getElementById(id)}
+function n(id){const e=$(id); return e ? (parseFloat(e.value)||0) : 0}
+function benchmarkTargetMT(area){
+  const a=Math.max(0,Number(area)||0);
+  const kgm2El=$('benchmarkKgSqm');
+  const manualEl=$('benchmarkTarget');
+  const kgm2=kgm2El ? parseFloat(kgm2El.value) : NaN;
+  const manual=manualEl ? parseFloat(manualEl.value) : NaN;
+  const mt=(Number.isFinite(kgm2) && kgm2>0) ? (kgm2*a/1000) : (Number.isFinite(manual)&&manual>0?manual:0);
+  const auto=$('benchmarkAutoMT');
+  if(auto) auto.value=mt.toFixed(3);
+  return mt;
+}
+function benchmarkChanged(){
+  const area=Math.max(0,n('L')*n('W'));
+  const kgm2=Math.max(0,n('benchmarkKgSqm'));
+  const mt=kgm2>0 ? kgm2*area/1000 : Math.max(0,n('benchmarkTarget'));
+  const auto=$('benchmarkAutoMT'); if(auto) auto.value=mt.toFixed(3);
+  const target=$('benchmarkTarget'); if(target && kgm2>0) target.value=mt.toFixed(3);
+  try{ autoGeometryFromLoads(); calculate(false); }catch(e){ console.error('Benchmark recalculation error',e); toast('Benchmark calculation error: '+e.message); }
+}
+function applyBenchmarkLive(){
+  const area=Math.max(0, n('L')*n('W'));
+  const kgm2=Math.max(0, parseFloat($('benchmarkKgSqm')?.value)||0);
+  const mt=kgm2>0 ? (kgm2*area/1000) : Math.max(0, parseFloat($('benchmarkTarget')?.value)||0);
+  const auto=$('benchmarkAutoMT'); if(auto) auto.value=mt.toFixed(3);
+  const target=$('benchmarkTarget'); if(target && kgm2>0) target.value=mt.toFixed(3);
+  if($('estimateMode')) $('estimateMode').value='practical';
+  try{ calculate(false); }catch(e){ console.error(e); }
+}
+function autoGeometryFromLoads(){
+  const L=Math.max(1,n('L')), W=Math.max(1,n('W'));
+  const Vb=cityData[$('location').value]||50;
+  const Vz=Vb*n('k1')*n('k2')*n('k3');
+  const p=.6*Vz*Vz/1000;
+  const dead=Math.max(0,n('dl')), live=Math.max(0,n('ll')), collateral=Math.max(0,n('collateral'));
+  const demand=dead+collateral+live+0.50*p;
+  // Preliminary planning rule: heavier gravity/wind demand -> tighter frame spacing.
+  let target=7.5-(Math.max(0,demand-1.0)*1.15);
+  target=Math.max(5.0,Math.min(7.5,target));
+  const nb=Math.max(1,Math.ceil(L/target));
+  const bay=L/nb;
+  const type=($('type')?.value||'').toLowerCase();
+  let slope=10;
+  if(type.includes('standing')||type.includes('warehouse')) slope=20;
+  else if(type.includes('heavy')||type.includes('industrial')) slope=8;
+  else if(type.includes('lean')) slope=10;
+  $('bay').value=bay.toFixed(2); $('nbay').value=nb; $('slope').value=String(slope);
+  const note=$('autoRuleNote');
+  if(note) note.textContent=`AUTO: ${nb} bays @ ${bay.toFixed(2)} m from ${L.toFixed(2)} m length. Preliminary spacing demand = ${demand.toFixed(2)} kN/m² (DL ${dead.toFixed(2)} + Collateral ${collateral.toFixed(2)} + LL ${live.toFixed(2)} + 0.50×Wind ${p.toFixed(2)}). Roof slope = 1:${slope} by building/roof-system standard; loads govern member design.`;
+  return {L,W,Vb,Vz,p,dead,collateral,live,demand,bay,nb,slope};
+}
+function rebuildSpanInputs(equalize=true){
+  const holder=$('spanInputs'); if(!holder) return;
+  let ns=Math.max(1,Math.min(5,Math.round(n('nspan'))||1));
+  const W=Math.max(1,n('W'));
+  const old=[]; for(let i=1;i<=5;i++){const e=$('s'+i); if(e) old.push(parseFloat(e.value)||0);}
+  holder.innerHTML='';
+  for(let i=1;i<=ns;i++){
+    const wrap=document.createElement('div');
+    const lab=document.createElement('label'); lab.textContent=`Span-${i} (m)`;
+    const inp=document.createElement('input'); inp.id='s'+i; inp.type='number'; inp.min='0.1'; inp.step='0.01';
+    inp.value=(equalize||!old[i-1])?(W/ns).toFixed(2):old[i-1].toFixed(2);
+    inp.addEventListener('input',()=>{
+      let total=0; for(let j=1;j<=ns;j++) total+=Math.max(0.1,n('s'+j));
+      $('W').value=total.toFixed(2);
+      calculate(false);
+    });
+    wrap.appendChild(lab); wrap.appendChild(inp); holder.appendChild(wrap);
+  }
+}
+function getSpans(){
+  const ns=Math.max(1,Math.min(5,Math.round(n('nspan'))||1));
+  const W=Math.max(0.1,n('W')); let spans=[];
+  for(let i=1;i<=ns;i++) spans.push(Math.max(0.1,n('s'+i)));
+  const total=spans.reduce((a,b)=>a+b,0);
+  if(Math.abs(total-W)>0.01 && ns>0){
+    // Width is the master geometry: preserve user-entered spans and scale them to total width.
+    const k=W/total; spans=spans.map(v=>v*k);
+  }
+  return spans;
+}
+function loads(){
+  const L=Math.max(1,n('L')), W=Math.max(1,n('W')), H=Math.max(.1,n('H'));
+  const ag=autoGeometryFromLoads(), bay=ag.bay, nb=ag.nb, slope=ag.slope;
+  const Vb=ag.Vb, Vz=ag.Vz, p=ag.p;
+  $('vb').value=Vb.toFixed(0); $('pz').value=p.toFixed(2);
+  const spans=getSpans();
+  // Practical PEB sheet-area methodology aligned to the reference costing sheet:
+  // 1:20 standing-seam roof uses ~1.02 slope factor; brick wall area is deducted from gross wall cladding.
+  const slopeFactor = slope===20 ? (21400/21000) : (slope===10 ? 1.005 : Math.sqrt(1+1/(slope*slope))); 
+  const roofArea=L*W*slopeFactor;
+  const grossWallArea=2*L*H + 2*W*H;
+  const brickArea=Math.min(grossWallArea, Math.max(0,n('brickL'))*Math.max(0,n('brickH')));
+  const wallArea=Math.max(0,grossWallArea-brickArea);
+  const roofThk=Math.max(.20,n('roofThk')), wallThk=Math.max(.20,n('wallThk'));
+  const roofSheetWt=roofThk*7.85; // kg/m2; 0.55 mm => 4.317 kg/m2, reference uses practical 5.45 kg/m2 including accessories/roll-forming scope
+  const wallSheetWt=wallThk*7.85;
+  const roofSheetKg=roofArea*(roofThk*7.85 + (roofThk>=0.54 && roofThk<=0.56 ? 1.13 : 0));
+  const wallSheetKg=wallArea*wallSheetWt;
+  const roofDL=Math.max(0,n('dl')+n('collateral'));
+  const LL=Math.max(0,n('ll'));
+  const trib=bay;
+  const frameDL=roofDL*trib, frameLL=LL*trib, frameW=p*trib;
+  const maxSpan=Math.max(...spans,W/spans.length);
+  const Mgravity=(frameDL+frameLL)*maxSpan*maxSpan/8;
+  const Mwind=frameW*H*H/8;
+  const Mservice=(frameDL+frameLL)*maxSpan*maxSpan/8;
+  const MulsGravity=1.50*(frameDL+frameLL)*maxSpan*maxSpan/8;
+  const MulsWind=1.20*(frameDL+frameLL)*maxSpan*maxSpan/8 + 1.50*frameW*H*H/8;
+  const MulsUplift=1.20*(frameDL+frameLL)*maxSpan*maxSpan/8 - 1.50*frameW*H*H/8;
+  const Mmax=Math.max(Mgravity,Mwind);
+  const mezzArea=Math.max(0,n('mezzArea'));
+  const ml=(($('mezzLoad')?.value||'0.50 / 2.50').split('/').map(v=>parseFloat(v)||0));
+  const mezzDL=Math.max(0,ml[0]||0), mezzLL=Math.max(0,ml[1]||0);
+  const mezzKg=mezzArea*(mezzDL+mezzLL)*1000/9.81;
+  const canopyArea=Math.max(0,n('canopyArea')), canopyDL=Math.max(0,n('canopyDL'));
+  const canopyKg=canopyArea*canopyDL*1000/9.81;
+  return {L,W,H,bay,nb,Vb,Vz,p,roofArea,wallArea,roofThk,wallThk,roofSheetWt,wallSheetWt,roofSheetKg,wallSheetKg,
+    roofDL,LL,trib,frameDL,frameLL,frameW,spans,maxSpan,Mgravity,Mwind,Mservice,MulsGravity,MulsWind,MulsUplift,Mmax,
+    mezzArea,mezzDL,mezzLL,mezzKg,canopyArea,canopyDL,canopyKg,brickH:n('brickH'),brickL:n('brickL'),brickLoad:n('brickLoad'),seismic:$('seismic')?.value||'IV'};
+}
+function anchorDesign(x){
+  const d=x.d, gravityLine=d.frameDL*1.5+d.frameLL*1.5, Rv=gravityLine*d.maxSpan/2;
+  const Mw=d.Mwind*1.5, lever=Math.max(.60,x.col[2]/1000+.45);
+  const tension=Math.max(0,Mw/lever-Rv);
+  let qty=4,dia=20;
+  if(tension>60)dia=24;if(tension>100)dia=30;if(tension>160)qty=6;if(tension>240)qty=8;if(tension>340)dia=36;
+  return {Rv,Mw,lever,tension,qty,dia,emb:Math.max(300,dia*18)};
+}
+function showAnchor(a){
+  const set=(id,v)=>{const e=$(id); if(e)e.textContent=v;};
+  set('anchorR',a.Rv.toFixed(1)+' kN'); set('anchorM',a.Mw.toFixed(1)+' kNm');
+  set('anchorArr',a.qty+'-Bolt Symmetric Group'); set('anchorDia','M'+a.dia);
+  set('anchorQty',a.qty); set('anchorEmb',a.emb+' mm');
+  set('anchorFormula',`Factored: 1.5(DL) + 1.5(LL) + 1.5(Wind). Tension screening = ${a.tension.toFixed(1)} kN; lever arm = ${a.lever.toFixed(2)} m.`);
+}
+
+
+function mode(m,b){D.mode=m;document.querySelectorAll('.views button').forEach(x=>x.classList.remove('active'));b.classList.add('active');draw(v117Calc())}
+function view(v,b){D.view=v;document.querySelectorAll('.views button').forEach(x=>x.classList.remove('active'));b.classList.add('active');draw(v117Calc())}
+function zoom(v){D.z*=v;draw(v117Calc())}function fit(){D.z=1;draw(v117Calc())}
+function draw(x){
+let c=$('cv'),ctx=c.getContext('2d'),w=c.clientWidth,h=c.clientHeight,r=devicePixelRatio||1;
+c.width=w*r;c.height=h*r;ctx.setTransform(r,0,0,r,0,0);ctx.clearRect(0,0,w,h);
+let d=x.d;
+// Width span geometry is driven by the actual Span-1 ... Span-N inputs.
+const spans=(d.spans&&d.spans.length?d.spans:[d.W]);
+const rowYs=[0]; for(const sp of spans) rowYs.push(rowYs[rowYs.length-1]+sp);
+const roofRise=d.W/(2*Math.max(1,n('slope')));
+const roofZ=(Y)=>d.H + roofRise*(1-Math.abs((Y-d.W/2)/(d.W/2)));
+let sc=Math.min((w-90)/(d.L+d.W*.6),(h-100)/(d.H+roofRise+d.W*.25))*D.z, ox=55,oy=h-55;
+function P(X,Y,Z){
+  if(D.mode==='2D'){
+    if(D.view==='PLAN') return [ox+X*sc,35+Y*sc*.7];
+    if(D.view==='SIDE') return [ox+Y*sc,oy-Z*sc];
+    return [ox+X*sc,oy-Z*sc];
+  }
+  return [ox+(X-Y*.55)*sc,oy-(Z+Y*.23)*sc];
+}
+ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#e4e9ee';ctx.lineWidth=1;
+// Main frame: ALL width column rows are generated from the selected number of spans.
+for(let i=0;i<x.frameLines;i++){
+  let X=Math.min(i*d.bay,d.L);
+  for(let j=0;j<rowYs.length;j++){
+    const Y=rowYs[j], topZ=roofZ(Y), a=P(X,Y,0), b=P(X,Y,topZ);
+    ctx.strokeStyle='#0b5887';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
+    ctx.fillStyle='#9d4438';
+    ctx.fillRect(a[0]-7,a[1]-3,14,6);
+    if(j===0 || j===rowYs.length-1) ctx.fillRect(b[0]-7,b[1]-3,14,5);
+  }
+  // Rafter follows the actual roof profile between every adjacent width span.
+  for(let j=0;j<rowYs.length-1;j++){
+    const y1=rowYs[j],y2=rowYs[j+1], a=P(X,y1,roofZ(y1)), b=P(X,y2,roofZ(y2));
+    ctx.strokeStyle='#9d4438';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
+  }
+}
+// Roof and wall secondary lines follow the same width-span geometry.
+ctx.strokeStyle='#4e8f53';ctx.lineWidth=1.3;
+for(let k=1;k<7;k++){
+  let z=d.H*k/7;
+  for(let Y of rowYs){let a=P(0,Y,z),b=P(d.L,Y,z);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();}
+}
+for(let k=1;k<6;k++){
+  let frac=k/6;
+  for(let j=0;j<rowYs.length-1;j++){
+    const y1=rowYs[j],y2=rowYs[j+1], y=y1+(y2-y1)*frac;
+    const z=roofZ(y);
+    let a=P(0,y,z),b=P(d.L,y,z);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
+  }
+}
+// Wall bracing on the outer walls and roof X-bracing in actual roof planes.
+ctx.strokeStyle='#c84d46';ctx.lineWidth=2;
+for(let i=1;i<x.frameLines-1;i+=3){
+  let X1=Math.min((i-1)*d.bay,d.L),X2=Math.min(i*d.bay,d.L);
+  for(const Y of [0,d.W]){
+    let a=P(X1,Y,0),b=P(X2,Y,d.H),c1=P(X2,Y,0),e=P(X1,Y,d.H);
+    ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.beginPath();ctx.moveTo(...c1);ctx.lineTo(...e);ctx.stroke();
+  }
+  // Put roof bracing in every applicable width span, not just the outer column line.
+  for(let j=0;j<rowYs.length-1;j++){
+    const y1=rowYs[j],y2=rowYs[j+1],z1=roofZ(y1),z2=roofZ(y2);
+    let a=P(X1,y1,z1),b=P(X2,y2,z2),c1=P(X2,y1,z1),e=P(X1,y2,z2);
+    ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.beginPath();ctx.moveTo(...c1);ctx.lineTo(...e);ctx.stroke();
+  }
+}
+if($('craneOn').checked){
+  let z=n('rail'), x1=Math.min(d.L,Math.max(0,d.bay*3)), x2=Math.min(d.L,Math.max(x1+d.bay*2,d.bay*12));
+  ctx.strokeStyle='#235c94';ctx.lineWidth=5;
+  // Runway rails on the selected supporting column rows.
+  const craneRows=(d.spans&&d.spans.length>1)?[rowYs[0],rowYs[rowYs.length-1]]:[0,d.W];
+  for(let Y of craneRows){let a=P(x1,Y,z),b=P(x2,Y,z);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();}
+  let xc=x1+(x2-x1)*.48;
+  ctx.strokeStyle='#efb400';ctx.lineWidth=8;
+  let g1=P(xc,0,z+.18),g2=P(xc,d.W,z+.18);ctx.beginPath();ctx.moveTo(...g1);ctx.lineTo(...g2);ctx.stroke();
+  if(($('craneGirderType')?.value||'double')==='double'){
+    let xc2=Math.min(x2,xc+Math.max(.35,d.bay*.12));
+    let h1=P(xc2,0,z+.18),h2=P(xc2,d.W,z+.18);ctx.beginPath();ctx.moveTo(...h1);ctx.lineTo(...h2);ctx.stroke();
+  }
+  ctx.strokeStyle='#7a4d00';ctx.lineWidth=3;let tc=P(xc,d.W*.25,z+.35);ctx.beginPath();ctx.arc(tc[0],tc[1],6,0,Math.PI*2);ctx.stroke();
+  let hook=P(xc,d.W*.25,z-.8);ctx.beginPath();ctx.moveTo(tc[0],tc[1]+6);ctx.lineTo(hook[0],hook[1]);ctx.stroke();
+}
+ctx.fillStyle='#aa443a';
+for(let i=0;i<x.frameLines;i++){
+  let X=Math.min(i*d.bay,d.L);
+  for(let j=0;j<rowYs.length;j++){let Y=rowYs[j],a=P(X,Y,0),b=P(X,Y,d.H);ctx.fillRect(a[0]-7,a[1]-3,14,6);if(j===0||j===rowYs.length-1)ctx.fillRect(b[0]-6,b[1]-3,12,5);}
+}
+ctx.fillStyle='#143b61';ctx.font='bold 13px Arial';ctx.fillText(D.mode+' PEB MODEL — '+$('location').value+' — Vb '+d.Vb+' m/s',15,20);
+ctx.font='10px Arial';ctx.fillText(`${d.L} × ${d.W} × ${d.H} m | ${d.nb} bays | ${x.frameLines} frame lines | ${x.rows} column rows (${spans.length} spans) | Auto: ${x.col?.name||x.col} + ${x.raf?.name||x.raf}`,15,37);
+}
+function generateSTAADText(){
+  const x=v117Calc(); const d=x.d;
+  const L=d.L,W=d.W,H=d.H,nb=Math.max(1,Math.round(d.nb)),ns=Math.max(1,Math.round(n('nspan'))),bay=L/nb;
+  const slope=n('slope')||10, rise=(W/2)/slope;
+  const nodes=[]; const members=[];
+  const key=new Map(); let nid=0, mid=0;
+  const addNode=(x,y,z)=>{const k=[x.toFixed(4),y.toFixed(4),z.toFixed(4)].join('|');if(key.has(k))return key.get(k);const id=++nid;key.set(k,id);nodes.push([id,x,y,z]);return id};
+  const addM=(a,b,type,prop)=>{const id=++mid;members.push([id,a,b,type,prop]);return id};
+  const frameXs=[]; for(let i=0;i<=nb;i++) frameXs.push(Math.min(L,i*bay));
+  const spans=(d.spans&&d.spans.length?d.spans:[W]);
+  const zLines=[0]; for(const sp of spans) zLines.push(zLines[zLines.length-1]+sp);
+  const roofZ=(z)=>H + rise*(1-Math.abs((z-W/2)/(W/2)));
+  const eaveNodes=[];
+  const craneMode=document.getElementById('craneSpanMode')?.value||'full';
+  let craneSupportRows=[0,zLines.length-1];
+  if(craneMode==='span1' && zLines.length>1) craneSupportRows=[0,1];
+  if(craneMode==='span2' && zLines.length>2) craneSupportRows=[1,2];
+  for(const x of frameXs){
+    const ev=[];
+    for(let jj=0;jj<zLines.length;jj++){
+      const z=zLines[jj];
+      const c=addNode(x,0,z); const top=roofZ(z); const e=addNode(x,top,z); ev.push(e);
+      const isCraneCol=($('craneOn')?.checked && craneSupportRows.includes(jj));
+      addM(c,e,isCraneCol?'CRANE COLUMN':'COLUMN',isCraneCol?'CRANE_COL':'COL');
+    }
+    eaveNodes.push(ev);
+    // Rafter segments connect every actual width span. Thus 4 spans produce 5 column rows.
+    for(let j=0;j<zLines.length-1;j++){
+      const z1=zLines[j],z2=zLines[j+1];
+      const r1=ev[j]; const r2=ev[j+1];
+      addM(r1,r2,'RAFTER','RAF');
+    }
+  }
+  // longitudinal purlins and girts, plus eave strut lines
+  const purlSpacing=1.5, girtSpacing=1.5;
+  for(let j=0;j<=ns;j++){
+    const z=zLines[j];
+    for(let k=1;k<=Math.max(1,Math.floor(H/girtSpacing));k++){
+      const y=Math.min(H,k*girtSpacing); for(let i=0;i<nb;i++){ const a=addNode(frameXs[i],y,z),b=addNode(frameXs[i+1],y,z); addM(a,b,'GIRT','GIRT'); }
+    }
+  }
+  // Roof longitudinal purlin lines at intermediate z/y positions
+  for(let j=0;j<=ns;j++){
+    const z=zLines[j];
+    for(let k=1;k<=3;k++){
+      const frac=k/4; const y=H+rise*frac; const zz=z;
+      for(let i=0;i<nb;i++){ const a=addNode(frameXs[i],y,zz),b=addNode(frameXs[i+1],y,zz); addM(a,b,'PURLIN','PURLIN'); }
+    }
+  }
+  // Wall X-bracing on side walls in every third bay
+  for(let i=0;i<nb;i+=3){
+    if(i+1>nb) break;
+    for(const z of [0,W]){
+      const a=addNode(frameXs[i],0,z),b=addNode(frameXs[i+1],H,z),c=addNode(frameXs[i+1],0,z),e=addNode(frameXs[i],H,z);
+      addM(a,b,'WALL BRACING','BRACE'); addM(c,e,'WALL BRACING','BRACE');
+    }
+    // roof X bracing in every applicable width span.
+    for(let j=0;j<zLines.length-1;j++){
+      const zA=zLines[j],zB=zLines[j+1];
+      const a=addNode(frameXs[i],roofZ(zA),zA),b=addNode(frameXs[i+1],roofZ(zB),zB);
+      const c=addNode(frameXs[i+1],roofZ(zA),zA),e=addNode(frameXs[i],roofZ(zB),zB);
+      addM(a,b,'ROOF BRACING','BRACE'); addM(c,e,'ROOF BRACING','BRACE');
+    }
+  }
+  // Crane runway beams on side supporting lines and bridge at selected bay
+  let craneM=[];
+  if($('craneOn')?.checked || $('crane')?.checked){
+    const railY=n('rail')||Math.max(6,H-.8);
+    for(const z of [0,W]) for(let i=0;i<nb;i++) craneM.push(addM(addNode(frameXs[i],railY,z),addNode(frameXs[i+1],railY,z),'CRANE RUNWAY','CRANE'));
+    let cb=Math.min(nb-1,Math.max(0,Math.floor(nb/2))), x=(frameXs[cb]+frameXs[cb+1])/2;
+    const girderSpan=(document.getElementById('craneSpanMode')?.value||'full')==='full'?W:(document.getElementById('craneSpanMode')?.value==='span2'?W/2:W/2);
+    const z0=(document.getElementById('craneSpanMode')?.value==='span2'?W/2:0), z1=(document.getElementById('craneSpanMode')?.value==='full'?W:z0+girderSpan);
+    const g1=addNode(x,railY,z0),g2=addNode(x,railY,z1); craneM.push(addM(g1,g2,'CRANE BRIDGE GIRDER','CRANE'));
+    if((document.getElementById('craneGirderType')?.value||'double')==='double'){
+      const off=Math.min(.5,Math.max(.2,W*.02)); const h1=addNode(x,railY,z0+off),h2=addNode(x,railY,z1-off); craneM.push(addM(h1,h2,'CRANE BRIDGE GIRDER','CRANE'));
+    }
+  }
+  // Member property groups
+  const lines=[];
+  lines.push('STAAD SPACE','START JOB INFORMATION','ENGINEER DATE 12-AUG-2026','JOB NAME PEB AUTOMATIC MODEL','END JOB INFORMATION','INPUT WIDTH 79','UNIT METER KN');
+  lines.push('JOINT COORDINATES');
+  for(const q of nodes) lines.push(`${q[0]} ${q[1].toFixed(3)} ${q[2].toFixed(3)} ${q[3].toFixed(3)}`);
+  lines.push('MEMBER INCIDENCES');
+  for(const m of members) lines.push(`${m[0]} ${m[1]} ${m[2]}`);
+  lines.push('DEFINE MATERIAL START','ISOTROPIC STEEL','E 2.05E+08','POISSON 0.3','DENSITY 76.8195','ALPHA 1.2E-05','DAMP 0.03','TYPE STEEL','STRENGTH FY 345000 FU 450000','END DEFINE MATERIAL');
+  lines.push('MEMBER PROPERTY');
+  const groups={COL:[],CRANE_COL:[],RAF:[],PURLIN:[],GIRT:[],BRACE:[],CRANE:[]};
+  for(const m of members) groups[m[4]].push(m[0]);
+  const prop=(ids,yd,zd)=>{if(ids.length) lines.push(ids.join(' ')+' PRIS YD '+yd+' ZD '+zd)};
+  prop(groups.COL,Math.max(.30,Math.min(1.0,(x.col?.d||500)/1000)),Math.max(.20,Math.min(.40,(x.col?.b||200)/1000)));
+  prop(groups.CRANE_COL,Math.max(.30,Math.min(1.0,(x.craneCol?.d||600)/1000)),Math.max(.20,Math.min(.45,(x.craneCol?.b||250)/1000)));
+  prop(groups.RAF,Math.max(.30,Math.min(1.0,(x.raf?.d||500)/1000)),Math.max(.20,Math.min(.40,(x.raf?.b||200)/1000)));
+  prop(groups.PURLIN,.20,.075); prop(groups.GIRT,.15,.075); prop(groups.BRACE,.020,.020); prop(groups.CRANE,.50,.25);
+  lines.push('CONSTANTS','MATERIAL STEEL ALL');
+  const base=[]; for(const x of frameXs) for(const z of zLines) base.push(addNode(x,0,z));
+  lines.push('SUPPORTS');
+  lines.push([...new Set(base)].join(' ')+' PINNED');
+  // loads
+  lines.push('LOAD 1 LOADTYPE DEAD TITLE DEAD LOAD','SELFWEIGHT Y -1.0');
+  lines.push('LOAD 2 LOADTYPE LIVE TITLE ROOF LIVE LOAD','MEMBER LOAD');
+  const roofMembers=members.filter(m=>m[3]==='RAFTER').map(m=>m[0]); if(roofMembers.length) lines.push(roofMembers.join(' ')+' UNI GY '+(-Math.abs(d.LL*d.bay)));
+  lines.push('LOAD 3 LOADTYPE WIND TITLE WIND +X','MEMBER LOAD');
+  const windMembers=members.filter(m=>m[3]==='COLUMN').map(m=>m[0]); if(windMembers.length) lines.push(windMembers.join(' ')+' UNI GX '+(d.p*d.bay));
+  lines.push('LOAD 4 LOADTYPE WIND TITLE WIND -X','MEMBER LOAD'); if(windMembers.length) lines.push(windMembers.join(' ')+' UNI GX '+(-d.p*d.bay));
+  if(craneM.length){ const ids=craneM.map(id=>id); lines.push('LOAD 5 LOADTYPE LIVE TITLE CRANE PRELIMINARY','MEMBER LOAD'); lines.push(ids.join(' ')+' UNI GY '+(-Math.max(1,(n('cap')||10)*9.81/4*1.10))); }
+  lines.push('LOAD COMB 101 1.5D+1.5L','1 1.5 2 1.5','LOAD COMB 102 1.5D+1.5W','1 1.5 3 1.5','LOAD COMB 103 0.9D+1.5W','1 0.9 3 1.5');
+  if(craneM.length) lines.push('LOAD COMB 104 1.2D+1.2L+1.2CRANE','1 1.2 2 1.2 5 1.2');
+  lines.push('PERFORM ANALYSIS','PRINT STATICS CHECK','FINISH');
+  return lines.join('\n');
+}
+function exportSTAAD(){
+  try{
+    const txt=generateSTAADText();
+    const project=(document.getElementById('type')?.value||'PEB_PROJECT').replace(/[^A-Za-z0-9_-]+/g,'_');
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'})); a.download=project+'_PEB_STAAD_MODEL.STD'; a.click();
+    toast('STAAD .STD file generated');
+  }catch(e){ console.error(e); toast('STAAD export error: '+e.message); }
+}
+function exportCSV(){
+  const x=v117Calc(); if($('estimateMode')?.value!=='engineering' && x.benchmarkMT>0) x.total=x.benchmarkMT*1000;
+  const rows=[['PEB DESIGN DATA','VALUE'],['Location',$('location').value],['Vb m/s',x.d.Vb],['Vz m/s',x.d.Vz],['Wind pressure kN/m2',x.d.p],['Length m',x.d.L],['Width m',x.d.W],['Height m',x.d.H],['Bays',x.d.nb],['Column',x.col.name],['Rafter',x.raf.name],['Main Frame kg',x.mainWt.toFixed(0)],['Secondary kg',x.secWt.toFixed(0)],['Hardware kg',x.hardwareWt.toFixed(0)],['Misc Steel kg',x.miscSteelWt.toFixed(0)],['Sheeting kg',x.sheetWt.toFixed(0)],['Mezzanine kg',x.mezzWt.toFixed(0)],['Canopy kg',x.canopyWt.toFixed(0)],['Grand Total kg',x.total.toFixed(0)],['Grand Total MT',(x.total/1000).toFixed(3)]];
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='PEB_Design_Data.csv';a.click();
+}
+
+function projectData(){
+ const x=v117Calc(); if($('estimateMode')?.value!=='engineering' && x.benchmarkMT>0) x.total=x.benchmarkMT*1000;
+ const ids=['type','L','W','H','nspan','s1','s2','s3','s4','s5','location','terrain','k3','k1','k2','dl','ll','collateral','impact','seismic','colMethod','rafMethod','roofThk','wallThk','mezzArea','mezzLoad','canopyArea','canopyDL','brickH','brickL','brickLoad','pebFrameCoeff','vDefl','craneOn','cap','craneSelfWeight','craneTrolleyWeight','craneWheels','craneLongFactor','craneTransFactor','estimateMode','benchmarkTarget','benchmarkKgSqm'];
+ const data={version:'V11.9',savedAt:new Date().toISOString(),inputs:{},design:{}};
+ ids.forEach(id=>{const e=$(id);if(e)data.inputs[id]=e.type==='checkbox'?e.checked:e.value;});
+ data.design={regularColumn:x.col.name,craneColumn:x.cl.on?x.craneCol.name:'CRANE OFF',rafter:x.raf.name,windVb:x.d.Vb,windVz:x.d.Vz,windPressure:x.d.p,totalKg:x.total,totalMT:x.total/1000};
+ return data;
+}
+function saveProjectFile(){const data=JSON.stringify(projectData(),null,2),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download='PEB_V11_9_Project.json';a.click();toast('Complete project saved');}
+function loadProjectFile(ev){const f=ev.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const data=JSON.parse(r.result);Object.entries(data.inputs||{}).forEach(([id,v])=>{const e=$(id);if(!e)return;if(e.type==='checkbox')e.checked=!!v;else e.value=v;});rebuildSpanInputs(false);calculate(false);toast('Project restored');}catch(e){toast('Invalid project file');}};r.readAsText(f);}
+
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+/* ================= V11.9 ENGINEERING CONCEPT OVERRIDE =================
+   Crane is a LOAD CASE only. Crane equipment is never added to building weight.
+   Reference benchmark from NEEMRANA ENQ-1: 175x120, 21,000 sqm.
+   Reference category rates: Built-up 16.047 kg/m2; Cold-formed 4.814;
+   Hardware 0.857; Misc steel 1.822; Sheeting 6.985; structure+sheeting 30.525 kg/m2.
+   Designer complete-weight benchmark supplied by user: 717.255 MT (34.155 kg/m2).
+*/
+function craneLoadOnly(d){
+  if(!$('craneOn')?.checked) return {on:false,capacity:0,totalVertical:0,wheel:0,factWheel:0,bracket:0,longitudinal:0,transverse:0,additionalColumnAxial:0,additionalColumnMoment:0,additionalRafterMoment:0};
+  const cap=Math.max(0,n('cap'))*9.81;
+  const self=Math.max(0,n('craneSelfWeight'));
+  const trolley=Math.max(0,n('craneTrolleyWeight'));
+  const wheels=Math.max(2,Math.round(n('craneWheels')||4));
+  const impact=Math.max(1,n('impact')||1.10);
+  const totalVertical=cap+self+trolley;
+  const wheel=totalVertical/wheels;
+  const factWheel=wheel*impact;
+  const bracket=factWheel;
+  const longitudinal=factWheel*Math.max(0,n('craneLongFactor')||0.10);
+  const transverse=factWheel*Math.max(0,n('craneTransFactor')||0.10);
+  const lever=Math.max(0.5,d.H-Math.max(0,n('rail')||7));
+  return {on:true,capacity:n('cap'),totalVertical,wheel,factWheel,bracket,longitudinal,transverse,
+    additionalColumnAxial:bracket,additionalColumnMoment:bracket*lever,
+    additionalRafterMoment:transverse*lever*0.35,wheels,impact};
+}
+function v117Sections(){
+  // Preliminary tapered/built-up PEB sections. Weight is a screening value only.
+  return [
+    {name:'PB-300/450×150×6×8',d:375,b:150,tw:6,tf:8,wt:34,Z:.00034,I:.000052},
+    {name:'PB-400/550×180×6×10',d:475,b:180,tw:6,tf:10,wt:47,Z:.00052,I:.000104},
+    {name:'PB-500/650×200×8×12',d:575,b:200,tw:8,tf:12,wt:67,Z:.00078,I:.000195},
+    {name:'PB-600/750×250×10×16',d:675,b:250,tw:10,tf:16,wt:101,Z:.00112,I:.00040},
+    {name:'PB-700/850×300×12×20',d:775,b:300,tw:12,tf:20,wt:145,Z:.00155,I:.00072}
+  ];
+}
+function v117Select(kind,d,cl){
+  const secs=v117Sections();
+  const span=kind==='col'?d.H:d.maxSpan;
+  let M=kind==='col' ? Math.max(d.Mwind,0.22*d.MulsGravity,0.18*Math.abs(d.MulsWind)) : Math.max(.35*d.Mgravity,.18*Math.abs(d.MulsWind));
+  let A=kind==='col' ? 1.5*(d.frameDL+d.frameLL)*d.maxSpan/2 : .12*1.5*(d.frameDL+d.frameLL);
+  if(cl){M+=cl.additionalColumnMoment||0; A+=cl.additionalColumnAxial||0;}
+  if(kind==='raf' && cl) M+=cl.additionalRafterMoment||0;
+  const limit=kind==='raf'?span*1000/Math.max(100,n('vDefl')||180):d.H*1000/150;
+  let chosen=secs[secs.length-1], util=9;
+  for(const s of secs){
+    const Z=s.Z*1e9, cap=Z*345/1.10/1e6, axial=s.wt*1000*345/1.15/1000;
+    const u=M/Math.max(1,cap)+A/Math.max(1,axial);
+    const slender=(span*1000/Math.max(25,s.d))*(kind==='col'?1.2:0.75);
+    if(u<=1 && slender<=180){chosen=s;util=u;break;}
+  }
+  return {...chosen,util,M,A};
+}
+function selectRafterBelowColumn(d,cl,col){
+  const secs=v117Sections();
+  const span=d.maxSpan;
+  let M=Math.max(.35*d.Mgravity,.18*Math.abs(d.MulsWind));
+  if(cl) M+=(cl.additionalRafterMoment||0);
+  const A=.12*1.5*(d.frameDL+d.frameLL);
+  const limit=span*1000/Math.max(100,n('vDefl')||180);
+  const eligible=secs.filter(s=>s.wt<col.wt && s.tw<col.tw && s.tf<col.tf);
+  let chosen=null,util=9;
+  for(const s of eligible){
+    const Z=s.Z*1e9, cap=Z*345/1.10/1e6, axial=s.wt*1000*345/1.15/1000;
+    const u=M/Math.max(1,cap)+A/Math.max(1,axial);
+    const slender=(span*1000/Math.max(25,s.d))*0.75;
+    if(u<=1 && slender<=180){chosen=s;util=u;break;}
+  }
+  if(!chosen){
+    chosen=eligible[eligible.length-1] || secs[0];
+    const Z=chosen.Z*1e9,cap=Z*345/1.10/1e6,axial=chosen.wt*1000*345/1.15/1000;
+    util=M/Math.max(1,cap)+A/Math.max(1,axial);
+  }
+  // If no section lighter than the column also satisfies demand (util<=1), the column/rafter
+  // relationship (rafter kept lighter than column) could not be honored without exceeding
+  // preliminary utilization — flag it for engineering review rather than silently accepting it.
+  return {...chosen,util,M,A,ruleApplied:true,reviewFlag:util>1};
+}
+function v117Calc(){
+  const d=loads();
+  const cl=craneLoadOnly(d);
+  const regular=v117Select('col',d,null);
+  const craneCol=cl.on?v117Select('col',d,cl):null;
+  const raf=selectRafterBelowColumn(d,cl.on?cl:null,regular);
+  const frameLines=d.nb+1, rows=Math.max(2,n('nspan')+1), colQty=frameLines*rows;
+  const craneLines=cl.on?2:0;
+  const regularQty=Math.max(0,colQty-craneLines);
+  const rafLen=(d.maxSpan+d.W/(2*n('slope')))*frameLines*(rows-1);
+  const purlLen=d.roofArea/1.5, girtLen=d.wallArea/1.5;
+  const area=d.L*d.W;
+  // Reference-calibrated PEB quantity model: loads determine sections; quantities use category rates.
+  const loadBase=Math.max(.20,n('dl')+n('collateral')+n('ll'));
+  const loadFactor=Math.max(.80,Math.min(1.35,loadBase/(.15+.20+.57)));
+  const spanFactor=Math.max(.88,Math.min(1.18,1+((d.maxSpan-7.5)/7.5)*.10));
+  const heightFactor=Math.max(.90,Math.min(1.15,1+((d.H-9.5)/9.5)*.08));
+  const craneFactor=cl.on?1+Math.min(.20,cl.factWheel/1000):1;
+  const practicalMode=$('estimateMode')?.value!=='engineering';
+  // Practical mode is anchored to the supplied Neemrana costing sheet; loads still decide sections separately.
+  const builtRate=practicalMode ? (336996/21000) : 16.047*loadFactor*spanFactor*heightFactor*craneFactor;
+  const coldRate=practicalMode ? (101100/21000) : 4.814*(d.roofArea+d.wallArea)/(21400+4750);
+  const hardwareRate=practicalMode ? (18000/21000) : .857;
+  const miscRate=practicalMode ? (38260/21000) : 1.822;
+  const mainWt=area*builtRate;
+  const secWt=area*coldRate;
+  const hardwareWt=area*hardwareRate;
+  const miscSteelWt=area*miscRate;
+  const refTrimKg=(2950/21000)*area, refGutterKg=(1173/21000)*area, refDownPipeKg=(1613/21000)*area;
+  const practicalSheetWt=d.roofArea*5.45+d.wallArea*5.12+refTrimKg+refGutterKg+refDownPipeKg;
+  const sheetWt=practicalMode ? practicalSheetWt : (d.roofSheetKg+d.wallSheetKg);
+  // Brick wall is a masonry scope item and is NOT part of PEB steel/building structural weight.
+  const brickWt=0;
+  const mezzWt=d.mezzKg, canopyWt=d.canopyKg;
+  const plates=hardwareWt*.55;
+  const brace=hardwareWt*.45+miscSteelWt*.35;
+  const otherMisc=miscSteelWt*.65;
+  const craneStructuralPremium=cl.on?Math.max(0,(cl.craneColWt||0)-(cl.regularColWt||0))*cl.supportRows:0;
+  const structureWt=mainWt+secWt+hardwareWt+miscSteelWt+craneStructuralPremium+mezzWt+canopyWt;
+  const structureSheetWt=structureWt+sheetWt;
+  const kgm2=Math.max(0,n('benchmarkKgSqm'));
+  const benchmarkMT=kgm2>0 ? (kgm2*area/1000) : benchmarkTargetMT(area);
+  const referenceComplete=benchmarkMT*1000;
+  const rawPracticalBase=Math.max(1,structureSheetWt);
+  const practicalScale=practicalMode && referenceComplete>0 ? (referenceComplete/rawPracticalBase) : 1;
+  // In Practical PEB mode, the entered benchmark kg/m²/MT is the actual target total.
+  // Scale the practical estimate transparently so changing 25/30/40 kg/m² changes the Estimate Summary.
+  const pMainWt=practicalMode ? mainWt*practicalScale : mainWt;
+  const pSecWt=practicalMode ? secWt*practicalScale : secWt;
+  const pHardwareWt=practicalMode ? hardwareWt*practicalScale : hardwareWt;
+  const pMiscSteelWt=practicalMode ? miscSteelWt*practicalScale : miscSteelWt;
+  const pSheetWt=practicalMode ? sheetWt*practicalScale : sheetWt;
+  const pMezzWt=practicalMode ? mezzWt*practicalScale : mezzWt;
+  const pCanopyWt=practicalMode ? canopyWt*practicalScale : canopyWt;
+  const scaledStructureWt=pMainWt+pSecWt+pHardwareWt+pMiscSteelWt+craneStructuralPremium*practicalScale+pMezzWt+pCanopyWt;
+  const scaledStructureSheetWt=scaledStructureWt+pSheetWt;
+  const refScopeAllowance=practicalMode ? 0 : 0;
+  const completeWt=practicalMode && referenceComplete>0 ? referenceComplete : structureSheetWt;
+  return {d,cl,col:regular,craneCol,raf,frameLines,rows,colQty,regularQty,craneLines,rafLen,purlLen,girtLen,
+    mainWt:pMainWt,secWt:pSecWt,hardwareWt:pHardwareWt,miscSteelWt:pMiscSteelWt,brace,otherMisc,plates,
+    sheetWt:pSheetWt,brickWt,mezzWt:pMezzWt,canopyWt:pCanopyWt,craneStructuralPremium:craneStructuralPremium*practicalScale,
+    structureWt:scaledStructureWt,structureSheetWt:scaledStructureSheetWt,referenceComplete,refScopeAllowance,
+    total:completeWt,builtRate,coldRate,loadFactor,spanFactor,heightFactor,craneFactor,practicalScale,benchmarkKgSqm:n('benchmarkKgSqm'),benchmarkMT};
+}
+function calculate(){
+  const x=v117Calc(),d=x.d,cl=x.cl;
+  if($('estimateMode')?.value!=='engineering' && x.benchmarkMT>0) x.total=x.benchmarkMT*1000;
+  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
+  const a=anchorDesign({d,col:[x.col.name,x.col.d,x.col.b,x.col.tw,x.col.tf,x.col.wt]});showAnchor(a);
+  $('projectTitle').textContent=$('type').value.toUpperCase();
+  $('props').innerHTML=[['Location',$('location').value],['Basic Wind Vb',d.Vb+' m/s'],['Design Wind Vz',d.Vz.toFixed(2)+' m/s'],['Wind Pressure',d.p.toFixed(2)+' kN/m²'],['Length',d.L+' m'],['Width',d.W+' m'],['Clear Height',d.H+' m'],['Area',(d.L*d.W).toFixed(0)+' m²'],['Crane Case',cl.on?cl.capacity+' MT ON':'OFF']].map(r=>`<div class=prop><span>${r[0]}</span><b>${r[1]}</b></div>`).join('');
+  $('design').innerHTML=`<div class=prop><span>Regular Column</span><b>${x.col.name}</b></div><div class=prop><span>Crane Column</span><b>${cl.on?x.craneCol.name:'Same regular column — Crane OFF'}</b></div><div class=prop><span>Rafter</span><b>${x.raf.name}</b></div><div class=prop><span>Rafter vs Column Rule</span><b class=${x.raf.reviewFlag?'warn':'ok'}>${x.raf.reviewFlag?'Rafter/Column relationship requires engineering review':'Rafter section + thickness kept lower'}</b></div><div class=prop><span>Column Demand</span><b>${(x.col.M).toFixed(1)} kNm + ${x.col.A.toFixed(1)} kN</b></div><div class=prop><span>Crane Building Load</span><b>${cl.on?cl.factWheel.toFixed(1)+' kN factored/wheel':'0 kN'}</b></div><div class=prop><span>Design Basis</span><b class=ok>DL + LL + WIND + CRANE LOAD ONLY</b></div>`;
+  $('conn').innerHTML=`<div class=prop><span>Regular Column</span><b>${x.col.name}</b></div><div class=prop><span>Crane Column</span><b>${cl.on?x.craneCol.name:'N/A'}</b></div><div class=prop><span>Rafter</span><b>${x.raf.name}</b></div><div class=prop><span>Connection</span><b>Standardized bolting geometry</b></div>`;
+  $('members').innerHTML=`<h3>MAIN FRAME & MEMBER SCHEDULE</h3><table><tr><th>Member</th><th>Preliminary Section</th><th>Qty</th><th>Length</th><th>Unit Wt. kg/m</th></tr>${[['Regular Column',x.col.name,x.regularQty,d.H,x.col.wt],['Crane Column',cl.on?x.craneCol.name:'—',cl.on?x.craneLines*2:0,d.H,cl.on?x.craneCol.wt:0],['Rafter',x.raf.name,x.frameLines*(x.rows-1),d.maxSpan+d.W/(2*n('slope')),x.raf.wt],['Purlin/Girt','Reference-calibrated cold-formed system','—','—',x.coldRate]].map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}<tr class=total><td colspan=4>MAIN + SECONDARY PRELIMINARY ESTIMATE</td><td>${Math.round(x.mainWt+x.secWt).toLocaleString()} kg</td></tr></table>`;
+  $('loads').innerHTML=`<h3>BUILDING LOAD + CRANE LOAD</h3><table>${[['Dead Load',n('dl').toFixed(2)+' kN/m²'],['Collateral Load',n('collateral').toFixed(2)+' kN/m²'],['Live Load',n('ll').toFixed(2)+' kN/m²'],['Wind Pressure',d.p.toFixed(2)+' kN/m²'],['ULS Gravity Moment',d.MulsGravity.toFixed(1)+' kNm'],['ULS Wind Moment',d.MulsWind.toFixed(1)+' kNm'],['Crane',cl.on?cl.capacity+' MT ON':'OFF'],['Crane Total Vertical',cl.on?cl.totalVertical.toFixed(1)+' kN':'0'],['Crane Wheel Load',cl.on?cl.wheel.toFixed(1)+' kN/wheel':'0'],['Crane Factored Building Load',cl.on?cl.factWheel.toFixed(1)+' kN/wheel':'0'],['Crane Longitudinal',cl.on?cl.longitudinal.toFixed(1)+' kN':'0'],['Crane Transverse',cl.on?cl.transverse.toFixed(1)+' kN':'0'],['Roof Sheeting',d.roofSheetKg.toFixed(0)+' kg'],['Wall Cladding',d.wallSheetKg.toFixed(0)+' kg'],['Mezzanine',x.mezzWt.toFixed(0)+' kg'],['Canopy',x.canopyWt.toFixed(0)+' kg']].map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join('')}</table><div class=formula>Crane equipment is a load source only. No crane girder, runway, rail, wheel or crane equipment weight is added to building steel estimate.</div>`;
+  const roofEst=($('estimateMode')?.value==='engineering')?d.roofSheetKg:d.roofArea*5.45; const wallEst=($('estimateMode')?.value==='engineering')?d.wallSheetKg:d.wallArea*5.12; const trimEst=($('estimateMode')?.value==='engineering')?0:((2950/21000)*d.L*d.W); const gutterEst=($('estimateMode')?.value==='engineering')?0:((1173/21000)*d.L*d.W); const downEst=($('estimateMode')?.value==='engineering')?0:((1613/21000)*d.L*d.W); let groups=[['Built-up Main Frame',x.mainWt],['Cold-formed Purlin/Girt',x.secWt],['Hardware + Connection Steel',x.hardwareWt],['Miscellaneous Steel',x.miscSteelWt],['Roof Sheeting',roofEst],['Wall Cladding',wallEst],['Trim + Gutter + Downpipes',trimEst+gutterEst+downEst],['Crane Structural Strengthening',x.craneStructuralPremium||0],['Brick Wall / Masonry — excluded from steel weight',0],['Mezzanine',x.mezzWt],['Canopy',x.canopyWt],['Reference Scope Allowance',x.refScopeAllowance]];
+  if($('estimateMode')?.value!=='engineering' && x.benchmarkMT>0){
+    const raw=groups.reduce((sum,g)=>sum+Math.max(0,Number(g[1])||0),0);
+    const scale=raw>0 ? (x.benchmarkMT*1000/raw) : 0;
+    groups=groups.map(g=>[g[0],Math.max(0,Number(g[1])||0)*scale]);
+  }
+  $('estimate').innerHTML=`<h3>COMPLETE BUILDING WEIGHT — PRACTICAL BENCHMARK <span style="float:right">LIVE: ${x.benchmarkMT.toFixed(3)} MT</span></h3><div class=note style="font-size:13px;padding:8px;margin-bottom:8px"><b>Steel Benchmark:</b> ${x.benchmarkKgSqm.toFixed(3)} kg/m² × ${(d.L*d.W).toFixed(0)} m² = <b>${x.benchmarkMT.toFixed(3)} MT</b> — this is the Practical PEB GRAND TOTAL.</div><table><tr><th>Item</th><th>KG</th><th>MT</th><th>kg/m²</th></tr>${groups.map(g=>`<tr><td>${g[0]}</td><td>${Math.round(g[1]).toLocaleString()}</td><td>${(g[1]/1000).toFixed(2)}</td><td>${(g[1]/(d.L*d.W)).toFixed(2)}</td></tr>`).join('')}<tr><td>Structure + Sheeting before scope allowance</td><td>${Math.round(x.structureSheetWt).toLocaleString()}</td><td>${(x.structureSheetWt/1000).toFixed(2)}</td><td>${(x.structureSheetWt/(d.L*d.W)).toFixed(2)}</td></tr><tr class=total><td>COMPLETE BUILDING WEIGHT</td><td>${Math.round(x.total).toLocaleString()}</td><td>${(x.total/1000).toFixed(3)}</td><td>${(x.total/(d.L*d.W)).toFixed(3)}</td></tr></table><div class=note><b>LIVE PRACTICAL BENCHMARK:</b> ${x.benchmarkKgSqm.toFixed(3)} kg/m² × ${(d.L*d.W).toFixed(0)} m² = ${x.benchmarkMT.toFixed(3)} MT. In Practical PEB mode this value IS the COMPLETE BUILDING WEIGHT target. Change 25 / 30 / 40 kg/m² and GRAND TOTAL becomes 525.000 / 630.000 / 840.000 MT respectively for 21,000 m². Neemrana reference categories are used only as transparent component distribution. Brick wall masonry and crane equipment are excluded.</div>`;
+  // crane load card values
+  set('craneWheelLoad',cl.on?cl.wheel.toFixed(1)+' kN/wheel':'0 kN');set('craneFactoredWheel',cl.on?cl.factWheel.toFixed(1)+' kN/wheel':'0 kN');set('craneBracketReaction',cl.on?cl.bracket.toFixed(1)+' kN':'0 kN');set('estCraneCap',cl.on?cl.capacity+' MT':'OFF');set('estCraneCol',cl.on?x.craneCol.name:'—');set('estCraneFactor',cl.on?cl.impact.toFixed(2)+' ×':'0 ×');
+  draw({d,col:x.col,craneCol:x.craneCol,raf:x.raf,frameLines:x.frameLines,rows:x.rows});
+}
+function exportPDF(){
+  const x=v117Calc(),d=x.d,cl=x.cl;
+  const win=window.open('','_blank'); if(!win){toast('Allow pop-ups for PDF report');return;}
+  const rows=a=>a.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+  const roofEst=($('estimateMode')?.value==='engineering')?d.roofSheetKg:d.roofArea*5.45; const wallEst=($('estimateMode')?.value==='engineering')?d.wallSheetKg:d.wallArea*5.12; const trimPack=($('estimateMode')?.value==='engineering')?0:((2950/21000+1173/21000+1613/21000)*d.L*d.W); const weights=[['Built-up Main Frame',x.mainWt],['Cold-formed Purlin/Girt',x.secWt],['Hardware + Connection Steel',x.hardwareWt],['Miscellaneous Steel',x.miscSteelWt],['Roof Sheeting',roofEst],['Wall Cladding',wallEst],['Trim + Gutter + Downpipes',trimPack],['Crane Structural Strengthening',x.craneStructuralPremium||0],['Brick Wall / Masonry — excluded',0],['Mezzanine',x.mezzWt],['Canopy',x.canopyWt],['Reference Scope Allowance',x.refScopeAllowance],['COMPLETE BUILDING WEIGHT',x.total]];
+  win.document.write(`<html><head><title>PEB V11.9 Complete Report</title><style>body{font-family:Arial;margin:25px;font-size:11px;color:#172536}h1,h2{color:#0b527f}table{width:100%;border-collapse:collapse;margin:8px 0 16px}th{background:#0b4e78;color:white;padding:6px;text-align:left}td{border:1px solid #d9e0e6;padding:5px}.total{font-weight:bold;background:#eef4f8}.note{font-size:9px;color:#536575}</style></head><body><h1>PEB Design & Estimation Master Software V11.9</h1><h2>Building Data</h2><table>${rows([['Location',$('location').value],['Length',d.L+' m'],['Width',d.W+' m'],['Clear Height',d.H+' m'],['Area',(d.L*d.W)+' m²'],['Roof Slope','1:'+n('slope')],['Wind Speed',d.Vb+' m/s'],['Dead Load',n('dl')+' kN/m²'],['Live Load',n('ll')+' kN/m²'],['Collateral Load',n('collateral')+' kN/m²']])}</table><h2>Crane Load on Building</h2><table>${rows([['Crane Case',cl.on?cl.capacity+' MT ON':'OFF'],['Total Vertical Crane Load',cl.on?cl.totalVertical.toFixed(1)+' kN':'0'],['Wheel Load',cl.on?cl.wheel.toFixed(1)+' kN/wheel':'0'],['Factored Wheel Load',cl.on?cl.factWheel.toFixed(1)+' kN/wheel':'0'],['Longitudinal Force',cl.on?cl.longitudinal.toFixed(1)+' kN':'0'],['Transverse Force',cl.on?cl.transverse.toFixed(1)+' kN':'0']])}</table><p class=note>Crane girder, runway, rail, wheel and crane equipment are excluded from building weight. Crane is used only as a building load case for column/rafter preliminary sizing.</p><h2>Member Selection</h2><table>${rows([['Regular Column',x.col.name],['Crane Column',cl.on?x.craneCol.name:'Same as regular column — Crane OFF'],['Rafter',x.raf.name],['Rafter/Column Relationship',x.raf.reviewFlag?'Requires engineering review':'Rafter kept lighter than column'],['Minimum Primary Thickness','5 mm'],['Minimum Secondary Thickness','2 mm'],['Connection','Standardized bolting geometry']])}</table><h2>Complete Weight</h2><table><tr><th>Item</th><th>KG</th><th>MT</th></tr>${weights.map(w=>`<tr class=${w[0].startsWith('COMPLETE')?'total':''}><td>${w[0]}</td><td>${w[1].toFixed(0)}</td><td>${(w[1]/1000).toFixed(3)}</td></tr>`).join('')}</table><p class=note>Neemrana reference sheet: structure + sheeting = 641.041 MT; designer complete benchmark = 717.255 MT. The 76.214 MT difference is explicitly shown as Reference Scope Allowance rather than being silently added to frame members.</p><h2>Design Basis</h2><p>Wind: IS 875 Part-3. Load combinations/serviceability: MBMA 2012 basis. Built-up members: AISC 2016 basis. Preliminary sizing only. Final STAAD analysis, buckling/effective length, member stability, serviceability, connections, seismic and foundation design remain mandatory.</p><p class=note><b>Disclaimer:</b> This software provides preliminary PEB sizing and estimation. Final design shall be verified by STAAD.Pro / structural analysis and applicable IS/AISC design checks.</p></body></html>`);win.document.close();setTimeout(()=>win.print(),300);
+}
+function navAction(target){
+document.querySelectorAll('#nav div').forEach(x=>x.classList.remove('sel'));
+ const item=[...document.querySelectorAll('#nav div')].find(x=>x.dataset.target===target);if(item)item.classList.add('sel');
+ if(target==='model'){mode('3D',document.querySelector('.views button'));toast('3D MODEL active');return}
+ if(target==='drawing'){view('FRONT',[...document.querySelectorAll('.views button')].find(b=>b.textContent==='FRONT'));toast('Front drawing view active');return}
+ if(target==='estimate'||target==='boq'){document.getElementById('estimate').scrollIntoView({behavior:'smooth'});toast('Estimate / BOQ summary opened');return}
+ const map={dashboard:'dashboard',building:'building',mainframe:'mainframe',crane:'crane',plates:'plates',baseplate:'anchor',report:'report'};
+ const id=map[target];if(id){const el=document.getElementById(id);if(el){el.classList.add('sectionFocus');el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>el.classList.remove('sectionFocus'),1500)}}
+ if(['secondary','bracing','mezz','canopy','openings','settings'].includes(target))toast(target.toUpperCase()+' module selected — controls are linked to the model generator.');
+}
+document.querySelectorAll('#nav div').forEach(el=>el.addEventListener('click',()=>navAction(el.dataset.target)));
+document.querySelectorAll('#craneSpanMode,#craneGirderType,#cap,#rail,#impact').forEach(el=>el.addEventListener('input',calculate));
+document.querySelectorAll('#craneSpanMode,#craneGirderType,#cap').forEach(el=>el.addEventListener('change',calculate));
+document.querySelectorAll('.tool').forEach(el=>el.addEventListener('click',()=>{
+ const t=el.textContent.trim().toUpperCase();
+ if(t.includes('NEW')){location.reload();return}
+ if(t.includes('SAVE')){saveProjectFile();}
+ else if(t.includes('OPEN')){$('projectFile').click();}
+ else if(t.includes('EXPORT')){exportPDF();}
+ else if(t.includes('REPORT')){exportPDF();}
+ else if(t.includes('BOQ')){document.getElementById('estimate').scrollIntoView({behavior:'smooth'});toast('BOQ / estimate opened')}
+ else if(t.includes('DRAWING')){view('FRONT',[...document.querySelectorAll('.views button')].find(b=>b.textContent==='FRONT'));toast('2D front drawing opened')}
+ else toast(t+' module selected');
+}));
+
+$('crane')?.addEventListener('change',()=>{ $('craneOn').checked=$('crane').checked; calculate(false); });
+$('craneOn')?.addEventListener('change',()=>{ $('crane').checked=$('craneOn').checked; calculate(false); });
+$('location').addEventListener('change',calculate);
+$('type').addEventListener('change',()=>{autoGeometryFromLoads(); calculate(false);});
+$('L').addEventListener('input',()=>{autoGeometryFromLoads(); rebuildSpanInputs(true); calculate(false);});
+$('W').addEventListener('input',()=>{rebuildSpanInputs(true); calculate(false);});
+$('H').addEventListener('input',()=>calculate(false));
+$('nspan').addEventListener('input',()=>{rebuildSpanInputs(true); calculate(false);});
+['dl','ll','collateral','k1','k2','k3','roofThk','wallThk','mezzArea','mezzLoad','canopyArea','canopyDL','brickH','brickL','brickLoad','pebFrameCoeff','vDefl','cap','rail','impact','craneWheels','craneLongFactor','craneTransFactor','benchmarkTarget'].forEach(id=>$(id)?.addEventListener('input',()=>{ autoGeometryFromLoads(); calculate(false); }));
+$('benchmarkKgSqm')?.addEventListener('change',benchmarkChanged);
+$('estimateMode')?.addEventListener('change',()=>{autoGeometryFromLoads();calculate(false);});
+benchmarkChanged();
+window.addEventListener('resize',()=>requestAnimationFrame(()=>draw(v117Calc())));
+rebuildSpanInputs(true);
+autoGeometryFromLoads();
+calculate(false);
+</script>
+</body>
+</html>

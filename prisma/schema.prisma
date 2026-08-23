@@ -1,0 +1,752 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../packages/database/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DESIGN_ENGINEER
+  ESTIMATOR
+  REVIEWER
+  VIEWER
+}
+
+enum NodeRole {
+  BASE
+  EAVE
+  RIDGE
+  INTERMEDIATE_ROOF
+  CRANE_SUPPORT
+  PURLIN
+  GIRT
+  BRACING
+  MEZZANINE
+  CANOPY
+  OTHER
+}
+
+enum MemberType {
+  COLUMN
+  TAPERED_COLUMN
+  RAFTER
+  TAPERED_RAFTER
+  END_WALL_COLUMN
+  PURLIN
+  GIRT
+  EAVE_STRUT
+  SAG_ROD
+  ROOF_BRACING
+  WALL_BRACING
+  CRANE_COLUMN
+  CRANE_RUNWAY
+  MEZZANINE
+  CANOPY
+  OTHER
+}
+
+enum LoadCaseType {
+  DEAD
+  LIVE
+  COLLATERAL
+  WIND_PLUS_X
+  WIND_MINUS_X
+  WIND_PLUS_Z
+  WIND_MINUS_Z
+  UPLIFT
+  CRANE
+  SEISMIC
+  PROJECT_SPECIFIC
+}
+
+enum SupportType {
+  PINNED
+  FIXED
+  FIXED_BUT
+  CUSTOM
+}
+
+enum CombinationCategory {
+  ULS
+  SLS
+  OTHER
+}
+
+enum ValidationSeverity {
+  ERROR
+  WARNING
+  INFO
+  REQUIRES_ENGINEERING_REVIEW
+  NOT_YET_DEFINED
+  UNSUPPORTED
+}
+
+enum DesignRunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  BLOCKED
+}
+
+model User {
+  id            String        @id @default(uuid()) @db.Uuid
+  email         String        @unique
+  passwordHash  String
+  name          String
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  memberships   ProjectUser[]
+  auditLogs     AuditLog[]
+}
+
+model ProjectUser {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @db.Uuid
+  userId    String   @db.Uuid
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+model Project {
+  id                  String              @id @default(uuid()) @db.Uuid
+  code                String              @unique
+  name                String
+  clientName          String              @default("")
+  location            String
+  buildingType        String
+  schemaVersion       String
+  applicationVersion  String
+  disclaimer          String
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  membersUsers        ProjectUser[]
+  designBasis         DesignBasis?
+  geometry            ProjectGeometry?
+  materials           Material[]
+  sections            Section[]
+  nodes               Node[]
+  members             Member[]
+  memberGroups        MemberGroup[]
+  supports            Support[]
+  releases            Release[]
+  loadCases           LoadCase[]
+  loadCombinations    LoadCombination[]
+  validationRuns      ValidationRun[]
+  designRuns          DesignRun[]
+  analysisRuns        AnalysisRun[]
+  auditLogs           AuditLog[]
+  connections         Connection[]
+  benchmark           Json?
+  staadExportRecords  StaadExportRecord[]
+}
+
+model Standard {
+  id          String            @id @default(uuid()) @db.Uuid
+  code        String
+  title       String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  versions    StandardVersion[]
+
+  @@unique([code])
+}
+
+model StandardVersion {
+  id          String   @id @default(uuid()) @db.Uuid
+  standardId  String   @db.Uuid
+  edition     String
+  notes       String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  standard    Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
+
+  @@unique([standardId, edition])
+}
+
+model DesignBasis {
+  id            String   @id @default(uuid()) @db.Uuid
+  projectId     String   @unique @db.Uuid
+  name          String
+  payload       Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  loadCases     LoadCase[]
+}
+
+model MaterialGrade {
+  id             String     @id @default(uuid()) @db.Uuid
+  name           String
+  fyMPa          Float
+  fuMPa          Float
+  catalogVersion String
+  source         String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  materials      Material[]
+
+  @@unique([name, catalogVersion])
+}
+
+model SectionFamily {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  sections  Section[]
+}
+
+model Material {
+  id             String         @id @default(uuid()) @db.Uuid
+  projectId      String         @db.Uuid
+  gradeId        String?        @db.Uuid
+  name           String
+  grade          String
+  fyMPa          Float
+  fuMPa          Float
+  eMPa           Float
+  poisson        Float
+  densityKgpm3   Float
+  source         String
+  catalogVersion String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  project        Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  gradeRef       MaterialGrade? @relation(fields: [gradeId], references: [id])
+  members        Member[]
+  sections       Section[]
+  designResults  MemberDesignResult[]
+  connectionComponents ConnectionComponent[]
+
+  @@index([projectId])
+}
+
+model Section {
+  id             String         @id @default(uuid()) @db.Uuid
+  projectId      String         @db.Uuid
+  familyId       String?        @db.Uuid
+  materialId     String?        @db.Uuid
+  family         String
+  designation    String
+  areaMm2        Float?
+  ixMm4          Float?
+  iyMm4          Float?
+  zxMm3          Float?
+  zyMm3          Float?
+  rxMm           Float?
+  ryMm           Float?
+  unitMassKgpm   Float
+  geometryNotes  String         @default("")
+  geometryConfig Json?
+  catalogVersion String
+  source         String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  project        Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  familyRef      SectionFamily? @relation(fields: [familyId], references: [id])
+  material       Material?      @relation(fields: [materialId], references: [id])
+  members        Member[]
+  designResults  MemberDesignResult[]
+  evaluations    CandidateEvaluation[]
+
+  @@index([projectId])
+}
+
+model ProjectGeometry {
+  id                 String     @id @default(uuid()) @db.Uuid
+  projectId          String     @unique @db.Uuid
+  lengthM            Float
+  widthM             Float
+  eaveHeightM        Float
+  roofSlopeRiseRun   String
+  baySpacingM        Float?
+  numberOfBays       Int?
+  unequalFinalBay    Boolean    @default(false)
+  craneConfig        Json?
+  mezzanineConfig    Json?
+  canopyConfig       Json?
+  endWallConfig      Json?
+  purlinConfig       Json?
+  girtConfig         Json?
+  eaveStrutConfig    Json?
+  sagRodConfig       Json?
+  roofBracingConfig  Json?
+  wallBracingConfig  Json?
+  notes              Json
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  project            Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  gridLines          GridLine[]
+  bays               Bay[]
+  spans              Span[]
+}
+
+model GridLine {
+  id             String          @id @default(uuid()) @db.Uuid
+  geometryId     String          @db.Uuid
+  axis           String
+  index          Int
+  coordinateM    Float
+  label          String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  geometry       ProjectGeometry @relation(fields: [geometryId], references: [id], onDelete: Cascade)
+  nodes          Node[]
+
+  @@index([geometryId])
+}
+
+model Bay {
+  id         String          @id @default(uuid()) @db.Uuid
+  geometryId String          @db.Uuid
+  index      Int
+  startXM    Float
+  endXM      Float
+  lengthM    Float
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  geometry   ProjectGeometry @relation(fields: [geometryId], references: [id], onDelete: Cascade)
+  nodes      Node[]
+
+  @@index([geometryId])
+}
+
+model Span {
+  id         String          @id @default(uuid()) @db.Uuid
+  geometryId String          @db.Uuid
+  index      Int
+  startZM    Float
+  endZM      Float
+  widthM     Float
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  geometry   ProjectGeometry @relation(fields: [geometryId], references: [id], onDelete: Cascade)
+
+  @@index([geometryId])
+}
+
+model Node {
+  id         String    @id @default(uuid()) @db.Uuid
+  projectId  String    @db.Uuid
+  gridLineId String?   @db.Uuid
+  bayId      String?   @db.Uuid
+  label      String
+  xM         Float
+  yM         Float
+  zM         Float
+  role       NodeRole
+  metadata   Json
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  gridLine   GridLine? @relation(fields: [gridLineId], references: [id])
+  bay        Bay?      @relation(fields: [bayId], references: [id])
+  startMembers Member[] @relation("MemberStart")
+  endMembers   Member[] @relation("MemberEnd")
+  supports   Support[]
+  connections Connection[]
+  analysisResults AnalysisNodeResult[]
+
+  @@unique([projectId, label])
+  @@index([projectId])
+}
+
+model MemberGroup {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @db.Uuid
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  members   Member[]
+
+  @@unique([projectId, name])
+  @@index([projectId])
+}
+
+model Member {
+  id             String       @id @default(uuid()) @db.Uuid
+  projectId      String       @db.Uuid
+  startNodeId    String       @db.Uuid
+  endNodeId      String       @db.Uuid
+  sectionId      String?      @db.Uuid
+  materialId     String?      @db.Uuid
+  groupId        String?      @db.Uuid
+  label          String
+  type           MemberType
+  designGroup    String       @default("")
+  lengthM        Float
+  quantity       Float        @default(1)
+  unitMassKgpm   Float?
+  totalWeightKg  Float?
+  weightStatus   String       @default("NOT_IMPLEMENTED")
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  startNode      Node         @relation("MemberStart", fields: [startNodeId], references: [id])
+  endNode        Node         @relation("MemberEnd", fields: [endNodeId], references: [id])
+  section        Section?     @relation(fields: [sectionId], references: [id])
+  material       Material?    @relation(fields: [materialId], references: [id])
+  group          MemberGroup? @relation(fields: [groupId], references: [id])
+  releases       Release[]
+  loadApps       LoadApplication[]
+  designResults  MemberDesignResult[]
+  analysisResults AnalysisMemberResult[]
+
+  @@unique([projectId, label])
+  @@index([projectId])
+  @@index([startNodeId])
+  @@index([endNodeId])
+  @@index([sectionId])
+}
+
+model Support {
+  id        String      @id @default(uuid()) @db.Uuid
+  projectId String      @db.Uuid
+  nodeId    String      @db.Uuid
+  type      SupportType
+  notes     String      @default("")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  node      Node        @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([nodeId])
+}
+
+model Release {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @db.Uuid
+  memberId  String   @db.Uuid
+  startFx   Boolean  @default(false)
+  startFy   Boolean  @default(false)
+  startFz   Boolean  @default(false)
+  startMx   Boolean  @default(false)
+  startMy   Boolean  @default(false)
+  startMz   Boolean  @default(false)
+  endFx     Boolean  @default(false)
+  endFy     Boolean  @default(false)
+  endFz     Boolean  @default(false)
+  endMx     Boolean  @default(false)
+  endMy     Boolean  @default(false)
+  endMz     Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([memberId])
+}
+
+model LoadCase {
+  id            String            @id @default(uuid()) @db.Uuid
+  projectId     String            @db.Uuid
+  designBasisId String            @db.Uuid
+  type          LoadCaseType
+  description   String
+  source        String
+  status        String
+  metadata      Json              @default("{}")
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  designBasis   DesignBasis       @relation(fields: [designBasisId], references: [id])
+  applications  LoadApplication[]
+  factors       CombinationFactor[]
+
+  @@index([projectId])
+}
+
+model LoadApplication {
+  id          String   @id @default(uuid()) @db.Uuid
+  loadCaseId  String   @db.Uuid
+  memberId    String?  @db.Uuid
+  targetType  String
+  targetId    String   @db.Uuid
+  magnitude   Float
+  direction   String
+  units       String
+  source      String   @default("")
+  designBasisRef String @default("")
+  description String   @default("")
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  loadCase    LoadCase @relation(fields: [loadCaseId], references: [id], onDelete: Cascade)
+  member      Member?  @relation(fields: [memberId], references: [id])
+
+  @@index([loadCaseId])
+}
+
+model LoadCombination {
+  id        String               @id @default(uuid()) @db.Uuid
+  projectId String               @db.Uuid
+  label     String
+  category  CombinationCategory
+  source    String
+  status    String
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  project   Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  factors   CombinationFactor[]
+
+  @@index([projectId])
+}
+
+model CombinationFactor {
+  id             String          @id @default(uuid()) @db.Uuid
+  combinationId  String          @db.Uuid
+  loadCaseId     String          @db.Uuid
+  factor         Float
+  combination    LoadCombination @relation(fields: [combinationId], references: [id], onDelete: Cascade)
+  loadCase       LoadCase        @relation(fields: [loadCaseId], references: [id])
+  @@index([combinationId])
+  @@index([loadCaseId])
+}
+
+model ValidationRun {
+  id            String            @id @default(uuid()) @db.Uuid
+  projectId     String            @db.Uuid
+  modelHash     String            @default("")
+  exportBlocked Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  findings      ValidationFinding[]
+
+  @@index([projectId])
+}
+
+model ValidationFinding {
+  id                    String            @id @default(uuid()) @db.Uuid
+  runId                 String            @db.Uuid
+  severity              ValidationSeverity
+  category              String
+  code                  String
+  message               String
+  technicalExplanation  String            @default("")
+  entityType            String?
+  entityId              String?           @db.Uuid
+  source                String            @default("ENGINE")
+  ruleRef               String            @default("")
+  blocking              Boolean           @default(false)
+  remediationGuidance   String            @default("")
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  run                   ValidationRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+}
+
+model DesignRun {
+  id                   String          @id @default(uuid()) @db.Uuid
+  projectId            String          @db.Uuid
+  applicationVersion   String
+  designBasisVersion   String          @default("unset")
+  sectionCatalogVersion String         @default("unset")
+  inputHash            String
+  status               DesignRunStatus @default(PENDING)
+  warnings             Json
+  errors               Json
+  snapshot             Json?
+  totalWeightKg        Float?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  project              Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  memberResults        MemberDesignResult[]
+
+  @@index([projectId])
+}
+
+model MemberDesignResult {
+  id                   String          @id @default(uuid()) @db.Uuid
+  designRunId          String          @db.Uuid
+  memberId             String          @db.Uuid
+  sectionId            String?         @db.Uuid
+  materialId           String?         @db.Uuid
+  governingLoadCaseId  String?         @db.Uuid
+  axialDemand          Float?
+  axialResistance      Float?
+  bendingDemand        Float?
+  bendingResistance    Float?
+  shearDemand          Float?
+  shearResistance      Float?
+  utilization          Float?
+  slenderness          Float?
+  status               String
+  warnings             Json?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  designRun            DesignRun       @relation(fields: [designRunId], references: [id], onDelete: Cascade)
+  member               Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  section              Section?        @relation(fields: [sectionId], references: [id])
+  material             Material?       @relation(fields: [materialId], references: [id])
+  evaluations          CandidateEvaluation[]
+
+  @@index([designRunId])
+  @@index([memberId])
+}
+
+model CandidateEvaluation {
+  id                   String             @id @default(uuid()) @db.Uuid
+  memberDesignResultId String             @db.Uuid
+  sectionId            String             @db.Uuid
+  status               String
+  governingCheck       String
+  utilization          Float?
+  failureReason        String?
+  rank                 Int
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  memberDesignResult   MemberDesignResult @relation(fields: [memberDesignResultId], references: [id], onDelete: Cascade)
+  section              Section            @relation(fields: [sectionId], references: [id])
+
+  @@index([memberDesignResultId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  projectId  String?  @db.Uuid
+  userId     String?  @db.Uuid
+  action     String
+  entityType String
+  entityId   String?
+  details    Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+model Connection {
+  id              String                @id @default(uuid()) @db.Uuid
+  projectId       String                @db.Uuid
+  type            String
+  nodeId          String?               @db.Uuid
+  sourceMemberIds Json                  @default("[]")
+  status          String                @default("NOT_YET_DEFINED")
+  metadata        Json                  @default("{}")
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  project         Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  node            Node?                 @relation(fields: [nodeId], references: [id], onDelete: SetNull)
+  components      ConnectionComponent[]
+
+  @@index([projectId])
+  @@index([nodeId])
+}
+
+model ConnectionComponent {
+  id           String     @id @default(uuid()) @db.Uuid
+  connectionId String     @db.Uuid
+  type         String
+  materialId   String?    @db.Uuid
+  dimensions   Json       @default("{}")
+  quantity     Int        @default(1)
+  massKg       Float      @default(0)
+  status       String     @default("NOT_YET_DEFINED")
+  source       String     @default("")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  material     Material?  @relation(fields: [materialId], references: [id])
+
+  @@index([connectionId])
+}
+
+model AnalysisRun {
+  id              String                 @id @default(uuid()) @db.Uuid
+  projectId       String                 @db.Uuid
+  provider        String
+  providerVersion String
+  modelHash       String
+  status          String
+  diagnostics     Json                   @default("[]")
+  createdAt       DateTime               @default(now())
+  durationMs      Float                  @default(0)
+  project         Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  memberResults   AnalysisMemberResult[]
+  nodeResults     AnalysisNodeResult[]
+
+  @@index([projectId])
+}
+
+model AnalysisMemberResult {
+  id                 String      @id @default(uuid()) @db.Uuid
+  analysisRunId      String      @db.Uuid
+  memberId           String      @db.Uuid
+  loadCaseId         String?     @db.Uuid
+  combinationId      String?     @db.Uuid
+  axialForceKn       Float
+  shearForceYKn      Float
+  shearForceZKn      Float
+  bendingMomentYKnM  Float
+  bendingMomentZKnM  Float
+  torsionKnM         Float
+  displacementMm     Float
+  authenticity       String
+  analysisRun        AnalysisRun @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
+  member             Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([analysisRunId])
+  @@index([memberId])
+}
+
+model AnalysisNodeResult {
+  id                 String      @id @default(uuid()) @db.Uuid
+  analysisRunId      String      @db.Uuid
+  nodeId             String      @db.Uuid
+  loadCaseId         String?     @db.Uuid
+  combinationId      String?     @db.Uuid
+  reactionFxKn       Float
+  reactionFyKn       Float
+  reactionFzKn       Float
+  reactionMxKnM      Float
+  reactionMyKnM      Float
+  reactionMzKnM      Float
+  displacementXMm    Float
+  displacementYMm    Float
+  displacementZMm    Float
+  authenticity       String
+  analysisRun        AnalysisRun @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
+  node               Node        @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([analysisRunId])
+  @@index([nodeId])
+}
+
+model StaadExportRecord {
+  id                   String   @id @default(uuid()) @db.Uuid
+  projectId            String   @db.Uuid
+  modelHash            String
+  serializerVersion    String
+  status               String
+  warnings             Json
+  errors               Json
+  referenceAvailable   Boolean
+  staadVersionVerified Boolean
+  createdAt            DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}

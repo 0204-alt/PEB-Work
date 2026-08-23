@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.local
+*.log
+.DS_Store
+Thumbs.db
+apps/api/generated/
+packages/database/generated/
+prisma/*.db
+.turbo
+.vite
+*.tsbuildinfo

@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: peb-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: peb
+      POSTGRES_PASSWORD: peb_dev_only
+      POSTGRES_DB: peb_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - peb_pgdata:/var/lib/postgresql/data
+
+volumes:
+  peb_pgdata:

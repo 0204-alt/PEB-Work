@@ -1,0 +1,26 @@
+{
+  "name": "peb-platform",
+  "private": true,
+  "version": "0.1.0-phase1",
+  "description": "PEB design, estimation, and STAAD model generation platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "test:core": "npm run test -w @peb/engineering-core",
+    "build": "npm run build --workspaces --if-present",
+    "db:generate": "npm run generate -w @peb/database",
+    "db:migrate": "npm run migrate -w @peb/database",
+    "dev:api": "npm run dev -w @peb/api",
+    "dev:web": "npm run dev -w @peb/web"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma",
+    "seed": "tsx prisma/seed.ts"
+  }
+}

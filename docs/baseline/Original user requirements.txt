@@ -1,0 +1,1805 @@
+Create a professional Excel-based PEB DESIGN, ESTIMATION & STAAD MODEL GENERATOR.
+
+IMPORTANT:
+I am providing a reference STAAD.Pro .STD file named:
+
+"Design model 2.STD"
+
+Use this file as the REFERENCE FORMAT for the final STAAD output.
+
+The final system must not only calculate an estimate.
+
+It must generate a COMPLETE STAAD.PRO INPUT FILE (.STD).
+
+When the generated .STD file is opened in STAAD.Pro, the complete PEB building model must be created automatically.
+
+The objective is:
+
+USER INPUT
+↓
+BUILDING GEOMETRY
+↓
+PEB MEMBER GENERATION
+↓
+DESIGN LOAD CALCULATION
+↓
+CRANE
+↓
+BRACING
+↓
+CONNECTIONS
+↓
+MEMBER PROPERTIES
+↓
+STAAD NODE & MEMBER GENERATION
+↓
+STAAD LOADS
+↓
+LOAD COMBINATIONS
+↓
+STAAD .STD FILE
+↓
+OPEN IN STAAD.PRO
+↓
+COMPLETE BUILDING MODEL
+
+
+===========================================================
+1. REFERENCE STAAD FILE
+===========================================================
+
+The uploaded "Design model 2.STD" must be studied carefully.
+
+Do NOT simply copy the existing coordinates.
+
+Understand its STAAD syntax and structure.
+
+The generated file must use the same type of STAAD syntax/structure, including where applicable:
+
+START JOB INFORMATION
+END JOB INFORMATION
+INPUT WIDTH
+UNIT
+JOINT COORDINATES
+MEMBER INCIDENCES
+DEFINE MATERIAL
+MEMBER PROPERTY
+CONSTANTS
+SUPPORTS
+MEMBER RELEASE
+DEFINE LOAD
+SELFWEIGHT
+MEMBER LOAD
+LOAD
+LOAD COMB
+PERFORM ANALYSIS
+PARAMETER
+CHECK CODE
+FINISH
+
+Use valid STAAD.Pro syntax compatible with commonly used STAAD.Pro versions.
+
+===========================================================
+2. VERY IMPORTANT OUTPUT REQUIREMENT
+===========================================================
+
+The final Excel/software must have a button:
+
+"GENERATE STAAD MODEL"
+
+When clicked:
+
+1. Calculate complete building geometry.
+2. Generate all STAAD JOINT COORDINATES.
+3. Generate all MEMBER INCIDENCES.
+4. Generate member properties.
+5. Generate material properties.
+6. Generate supports.
+7. Generate releases where required.
+8. Generate dead loads.
+9. Generate live loads.
+10. Generate wind loads.
+11. Generate crane loads.
+12. Generate load combinations.
+13. Generate design parameters.
+14. Generate analysis/check commands.
+15. Save a complete .STD file.
+
+File name:
+
+<Project Name>_PEB_STAAD_MODEL.STD
+
+Example:
+
+ABC_FACTORY_PEB_STAAD_MODEL.STD
+
+
+===========================================================
+3. BASIC INPUT
+===========================================================
+
+Create input sheet:
+
+PROJECT INPUT
+
+Inputs:
+
+Project Name
+Client
+Location
+Building Type
+
+Length
+Width
+Eave Height
+Roof Slope
+Bay Spacing
+No. of Bays
+No. of Width Spans
+
+Column Type
+Rafter Type
+
+Crane ON/OFF
+Crane Type
+Crane Capacity
+Crane Span
+Crane Bay
+Crane Rail Level
+
+Roof Bracing
+Wall Bracing
+
+Mezzanine
+Canopy
+
+Roof Cladding
+Wall Cladding
+
+
+===========================================================
+4. AUTOMATIC BUILDING GRID
+===========================================================
+
+The system must automatically generate the STAAD grid.
+
+Example:
+
+Length = 80 m
+Bay spacing = 6 m
+
+Generate:
+
+0
+6
+12
+18
+24
+30
+36
+42
+48
+54
+60
+66
+72
+78
+80
+
+If the last bay is different, automatically calculate the final bay.
+
+Do NOT force equal bays if the building length does not divide equally.
+
+Width example:
+
+Width = 30 m
+No. of spans = 2
+
+Generate:
+
+0
+15
+30
+
+Therefore 3 column lines.
+
+Width = 40 m
+No. of spans = 4
+
+Generate:
+
+0
+10
+20
+30
+40
+
+Therefore 5 column lines.
+
+
+===========================================================
+5. STAAD JOINT COORDINATES
+===========================================================
+
+Generate actual:
+
+JOINT COORDINATES
+
+for:
+
+Main frame columns
+Main frame rafters
+Intermediate frame points
+Ridge points
+Eave points
+Crane columns
+Crane bracket level
+Crane runway
+End wall columns
+Bracing nodes
+Roof bracing nodes
+Wall bracing nodes
+Mezzanine nodes
+Canopy nodes
+
+The coordinate system must be consistent. 
+
+Use:
+
+
+
+X = Building Length
+
+Y = Vertical Height
+
+Z = Building Width
+
+
+
+The building must never appear upside down.
+
+
+
+Column base must always be at the bottom.
+
+
+
+Roof/rafter must be above columns.
+
+
+
+===========================================================
+
+6. MAIN FRAME GENERATION
+
+===========================================================
+
+
+
+Generate STAAD members for:
+
+
+
+MAIN COLUMNS
+
+CRANE COLUMNS
+
+RAFTERS
+
+END WALL COLUMNS
+
+
+
+Column options:
+
+
+
+Tapered Column
+
+Straight Column
+
+Built-Up Column
+
+
+
+Rafter options:
+
+
+
+Tapered Rafter
+
+Straight Rafter
+
+Built-Up Rafter
+
+
+
+
+
+===========================================================
+
+7. TAPERED COLUMN
+
+===========================================================
+
+
+
+The Excel calculation engine must calculate:
+
+
+
+Bottom depth
+
+Top depth
+
+Web thickness
+
+Flange width
+
+Flange thickness
+
+Length
+
+Unit weight
+
+
+
+Then generate corresponding STAAD member property.
+
+
+
+Do NOT generate only a description.
+
+
+
+The STAAD member property must represent the actual section.
+
+
+
+Where built-up/tapered sections are required, use appropriate STAAD syntax.
+
+
+
+===========================================================
+
+8. TAPERED RAFTER
+
+===========================================================
+
+
+
+Calculate:
+
+
+
+Start depth
+
+End depth
+
+Web thickness
+
+Flange width
+
+Flange thickness
+
+
+
+Generate actual STAAD member/property information.
+
+
+
+Rafter must connect correctly with:
+
+
+
+COLUMN → RAFTER
+
+
+
+Do not allow disconnected members.
+
+
+
+===========================================================
+
+9. MEMBER CONNECTIVITY
+
+===========================================================
+
+
+
+After generating the STAAD model, perform an automatic connectivity check.
+
+
+
+Every structural member must have valid start and end nodes.
+
+
+
+Check:
+
+
+
+Column connected to base
+
+Column connected to rafter
+
+Rafter connected at ridge
+
+Crane column connected to crane system
+
+Purlins connected to frame
+
+Girts connected to columns
+
+Bracing connected to actual nodes
+
+
+
+Show:
+
+
+
+CONNECTED
+
+or
+
+DISCONNECTED
+
+
+
+in an error-check sheet.
+
+
+
+
+
+===========================================================
+
+10. ROOF PURLINS
+
+===========================================================
+
+
+
+Automatically generate purlin nodes and members.
+
+
+
+Inputs:
+
+
+
+Purlin spacing
+
+Purlin section
+
+
+
+Generate:
+
+
+
+STAAD JOINT COORDINATES
+
+STAAD MEMBER INCIDENCES
+
+MEMBER PROPERTY
+
+
+
+for roof purlins.
+
+
+
+Purlins must actually appear in the STAAD model.
+
+
+
+
+
+===========================================================
+
+11. WALL GIRTS
+
+===========================================================
+
+
+
+Generate:
+
+
+
+Wall Girt Nodes
+
+Wall Girt Members
+
+Member Properties
+
+
+
+for all required wall elevations.
+
+
+
+===========================================================
+
+12. ROOF BRACING
+
+===========================================================
+
+
+
+This is extremely important.
+
+
+
+Roof bracing must NOT be represented only in the estimate.
+
+
+
+It must actually exist in the STAAD model.
+
+
+
+Options:
+
+
+
+Rod Bracing
+
+Pipe Bracing
+
+Angle Bracing
+
+
+
+Patterns:
+
+
+
+X Bracing
+
+Single Diagonal
+
+Chevron
+
+
+
+User selects:
+
+
+
+Roof Bracing Bays
+
+
+
+Example:
+
+
+
+Bay 1–2
+
+Bay 6–7
+
+Bay 12–13
+
+
+
+Generate actual STAAD:
+
+
+
+JOINT COORDINATES
+
+MEMBER INCIDENCES
+
+MEMBER PROPERTY
+
+for roof bracing.
+
+
+
+===========================================================
+
+13. WALL BRACING
+
+===========================================================
+
+
+
+Generate wall bracing separately.
+
+
+
+Options:
+
+
+
+Rod
+
+Pipe
+
+Angle
+
+
+
+Patterns:
+
+
+
+X Bracing
+
+Single Diagonal
+
+
+
+Generate actual STAAD members.
+
+
+
+User must be able to select which grid lines contain wall bracing.
+
+
+
+===========================================================
+
+14. CRANE SYSTEM
+
+===========================================================
+
+
+
+Crane:
+
+
+
+ON/OFF
+
+
+
+Crane Type:
+
+
+
+Single Girder
+
+Double Girder
+
+
+
+Capacity:
+
+
+
+5 MT
+
+10 MT
+
+20 MT
+
+30 MT
+
+50 MT
+
+
+
+Crane Span:
+
+
+
+Span-1 Left
+
+Span-2 Right
+
+Full Width
+
+Custom Span
+
+
+
+Crane Bay:
+
+
+
+Bay range selector.
+
+
+
+Example:
+
+
+
+Bay 4 to Bay 12
+
+
+
+Crane Rail Level:
+
+
+
+Example 7.0 m
+
+
+
+
+
+===========================================================
+
+15. CRANE GEOMETRY
+
+===========================================================
+
+
+
+The crane must be visible in:
+
+
+
+PLAN
+
+FRONT
+
+SIDE
+
+3D
+
+
+
+The crane bridge must span across the selected building width.
+
+
+
+Do NOT show only crane rail.
+
+
+
+Generate:
+
+
+
+Crane Girder
+
+Crane Rail
+
+Crane Columns
+
+Crane Brackets
+
+Crane Nodes
+
+Runway Beam
+
+
+
+The crane bridge must have correct width.
+
+
+
+===========================================================
+
+16. CRANE LOADS
+
+===========================================================
+
+
+
+Automatically calculate:
+
+
+
+Crane capacity
+
+Crane self weight
+
+Trolley weight
+
+Wheel load
+
+Maximum wheel load
+
+Impact factor
+
+Horizontal surge
+
+Longitudinal force
+
+Crane reaction
+
+
+
+Use preliminary assumptions when supplier data is unavailable.
+
+
+
+Clearly mark assumptions.
+
+
+
+Allow manual override.
+
+
+
+===========================================================
+
+17. STAAD CRANE LOAD GENERATION
+
+===========================================================
+
+
+
+Generate appropriate STAAD:
+
+
+
+MEMBER LOAD
+
+
+
+or
+
+
+
+JOINT LOAD
+
+
+
+for crane effects depending on the selected modeling approach.
+
+
+
+Generate separate load cases for:
+
+
+
+CRANE 1
+
+CRANE 2
+
+CRANE 3
+
+etc.
+
+
+
+Generate crane positions where applicable.
+
+
+
+The STAAD file must contain the actual crane loading model.
+
+
+
+===========================================================
+
+18. BASE PLATES
+
+===========================================================
+
+
+
+Calculate:
+
+
+
+Base plate size
+
+Thickness
+
+Quantity
+
+
+
+Generate base plate information in:
+
+
+
+PLATE SCHEDULE
+
+
+
+and connection schedule.
+
+
+
+Where appropriate, model base connection using STAAD support/release assumptions.
+
+
+
+===========================================================
+
+19. ANCHOR BOLTS
+
+===========================================================
+
+
+
+Automatically calculate:
+
+
+
+Bolt quantity
+
+Bolt diameter
+
+Bolt length
+
+Bolt grade
+
+Total quantity
+
+Total weight
+
+
+
+Example:
+
+
+
+4-M24
+
+
+
+The anchor bolt requirement must change if:
+
+
+
+Column size
+
+Column reaction
+
+Base plate
+
+
+
+changes.
+
+
+
+
+
+===========================================================
+
+20. CONNECTIONS
+
+===========================================================
+
+
+
+Create:
+
+
+
+Rafter splice
+
+Column splice
+
+Rafter-column connection
+
+Crane bracket
+
+Crane runway connection
+
+Bracing connection
+
+Purlin connection
+
+Girt connection
+
+Generate:
+
+
+
+Connection Plate
+
+End Plate
+
+Splice Plate
+
+Gusset Plate
+
+Stiffener
+
+Shear Tab
+
+Bracket Plate
+
+
+
+Connection quantities must automatically follow the generated STAAD members.
+
+
+
+
+
+===========================================================
+
+21. DESIGN LOADS
+
+===========================================================
+
+
+
+Calculate:
+
+
+
+Dead Load
+
+Roof Live Load
+
+Collateral Load
+
+Wind Load
+
+Wind Uplift
+
+Crane Load
+
+Mezzanine Load
+
+Canopy Load
+
+
+
+Generate STAAD:
+
+
+
+SELFWEIGHT
+
+MEMBER LOAD
+
+JOINT LOAD
+
+
+
+as applicable.
+
+
+
+
+
+===========================================================
+
+22. INDIA WIND DATA
+
+===========================================================
+
+
+
+Create India location database.
+
+
+
+Locations include:
+
+
+
+Delhi
+
+Mumbai
+
+Chennai
+
+Kolkata
+
+Bengaluru
+
+Hyderabad
+
+Ahmedabad
+
+Pune
+
+Jaipur
+
+Lucknow
+
+Nagpur
+
+Indore
+
+Bhopal
+
+Surat
+
+Vadodara
+
+Coimbatore
+
+Visakhapatnam
+
+Bhubaneswar
+
+Guwahati
+
+Patna
+
+Ranchi
+
+Raipur
+
+Chandigarh
+
+Noida
+
+Gurugram
+
+
+
+When location changes:
+
+
+
+Basic Wind Speed
+
+Wind Pressure
+
+Wind Load
+
+
+
+must automatically update.
+
+
+
+Use the applicable Indian Standard design basis.
+
+
+
+===========================================================
+
+23. STAAD LOAD CASES
+
+===========================================================
+
+
+
+Generate STAAD load cases for:
+
+
+
+DEAD LOAD
+
+LIVE LOAD
+
+COLLATERAL LOAD
+
+WIND +X
+
+WIND -X
+
+WIND +Z
+
+WIND -Z
+
+ROOF UPLIFT
+
+CRANE LOADS
+
+SEISMIC LOADS if enabled
+
+
+
+Use proper STAAD syntax.
+
+
+
+===========================================================
+
+24. LOAD COMBINATIONS
+
+===========================================================
+
+
+
+Automatically generate appropriate combinations based on the selected design basis.
+
+
+
+Do not hard-code only one combination.
+
+
+
+Show:
+
+
+
+Combination No.
+
+Description
+
+Formula
+
+
+
+Also write those combinations into the .STD file.
+
+
+
+
+
+===========================================================
+
+25. STAAD MATERIAL
+
+===========================================================
+
+
+
+Generate appropriate material definitions.
+
+
+
+Example:
+
+
+
+DEFINE MATERIAL START
+
+ISOTROPIC STEEL
+
+E 2.05e8
+
+POISSON 0.3
+
+DENSITY 76.8195
+
+ALPHA 1.2e-5
+
+DAMP 0.03
+
+TYPE STEEL
+
+STRENGTH FY 345000 FU 450000
+
+END DEFINE MATERIAL
+
+
+
+Adjust units according to selected STAAD unit system.
+
+
+
+Do not mix units.
+
+
+
+
+
+===========================================================
+
+26. STAAD SUPPORTS
+
+===========================================================
+
+
+
+Generate support conditions automatically.
+
+
+
+Example:
+
+
+
+PINNED
+
+FIXED
+
+FIXED BUT
+
+CUSTOM
+
+
+
+The selected support type must be applied to correct base nodes.
+
+
+
+===========================================================
+
+27. MEMBER RELEASE
+
+===========================================================
+
+
+
+Generate appropriate member releases where required.
+
+
+
+For example:
+
+
+
+Bracing members
+
+Secondary members
+
+Pinned connections
+
+
+
+But do not blindly release every secondary member.
+
+
+
+The release logic must be controlled from DESIGN_BASIS.
+
+
+
+===========================================================
+
+28. STAAD MEMBER PROPERTY
+
+===========================================================
+
+
+
+The generated .STD file must contain valid:
+
+
+
+MEMBER PROPERTY
+
+
+
+commands.
+
+
+
+For standard sections use appropriate STAAD section syntax. 
+
+For built-up/tapered members use appropriate STAAD built-up/tapered property syntax.
+
+The member properties must correspond to the sizes calculated in Excel.
+
+===========================================================
+29. MEMBER NUMBERING
+===========================================================
+
+Generate clean sequential numbering.
+
+Example:
+
+Main Columns
+1–100
+
+Rafters
+101–200
+
+Purlins
+201–500
+
+Girts
+501–800
+
+Bracing
+801–900
+
+Crane
+901–1000
+
+etc.
+
+Also create a mapping:
+
+STAAD Member No.
+Member Type
+Grid
+Bay
+Section
+Length
+Weight
+
+
+===========================================================
+30. JOINT NUMBERING
+===========================================================
+
+Generate clean sequential joint numbering.
+
+Also create:
+
+JOINT NO.
+X
+Y
+Z
+LOCATION
+MEMBER TYPE
+
+in Excel.
+
+This is required so the STAAD model can be audited.
+
+
+===========================================================
+31. STAAD FILE PREVIEW
+===========================================================
+
+Create a sheet:
+
+STAAD_OUTPUT
+
+Display the generated STAAD text exactly as it will be exported.
+
+Example:
+
+STAAD SPACE
+START JOB INFORMATION
+...
+JOINT COORDINATES
+...
+MEMBER INCIDENCES
+...
+MEMBER PROPERTY
+...
+SUPPORTS
+...
+LOAD
+...
+LOAD COMB
+...
+FINISH
+
+Use monospaced font.
+
+===========================================================
+32. EXPORT STAAD BUTTON
+===========================================================
+
+Create a button:
+
+EXPORT .STD FILE
+
+When clicked:
+
+Generate:
+
+<Project Name>_PEB_STAAD_MODEL.STD
+
+Do not require the user to manually copy/paste hundreds or thousands of lines.
+
+The generated file must be a normal text-based STAAD .STD file.
+
+===========================================================
+33. VALIDATION BEFORE EXPORT
+===========================================================
+
+Before exporting, automatically check:
+
+1. All joints have valid coordinates.
+2. No duplicate joints.
+3. No disconnected main members.
+4. All columns connect to base.
+5. All rafters connect to columns.
+6. Ridge is connected.
+7. Bracing connects to existing nodes.
+8. Crane runway connects to crane columns/brackets.
+9. No member references a nonexistent joint.
+10. All members have a property.
+11. All materials are assigned.
+12. Supports exist.
+13. Loads reference valid members/nodes.
+14. Load combinations reference valid load cases.
+15. No invalid STAAD syntax.
+
+Display:
+
+STAAD MODEL STATUS
+
+GREEN = READY TO EXPORT
+RED = ERROR
+
+Do NOT allow export if critical errors exist.
+
+
+===========================================================
+34. ESTIMATION ENGINE
+===========================================================
+
+The same generated STAAD model must feed the estimation engine.
+
+Therefore:
+
+STAAD MEMBER
+↓
+SECTION
+↓
+LENGTH
+↓
+UNIT WEIGHT
+↓
+TOTAL WEIGHT
+↓
+BOQ
+↓
+ESTIMATE
+
+No duplicate manual calculation.
+
+===========================================================
+35. MEMBER SCHEDULE
+===========================================================
+
+Automatically create:
+
+Member No.
+Member Type
+STAAD Member No.
+Start Joint
+End Joint
+Length
+Section
+Unit Weight
+Quantity
+Total Weight
+Grade
+===========================================================
+36. WEIGHT SUMMARY
+===========================================================
+
+Calculate:
+
+Main Frame
+Secondary Steel
+Bracing
+Crane
+Mezzanine
+Canopy
+Connection Steel
+Base Plates
+Anchor Bolts
+Roof Cladding
+Wall Cladding
+Gutter
+Downpipe
+Accessories
+
+Show:
+
+KG
+MT
+KG/SQM
+Percentage
+
+
+===========================================================
+37. ESTIMATE
+===========================================================
+
+Generate:
+
+Material Cost
+Fabrication
+Painting
+Erection
+Transportation
+Cladding
+Accessories
+Crane System
+
+Then:
+
+Subtotal
+GST
+Grand Total
+
+
+===========================================================
+38. IMPORTANT DIFFERENCE FROM NORMAL EXCEL ESTIMATE
+===========================================================
+
+This workbook must NOT work like a normal estimation sheet.
+
+Normal system:
+
+INPUT → ESTIMATE
+
+Required system:
+
+INPUT
+↓
+GEOMETRY
+↓
+STRUCTURAL MODEL
+↓
+STAAD NODES
+↓
+STAAD MEMBERS
+↓
+MEMBER PROPERTIES
+↓
+LOADS
+↓
+LOAD COMBINATIONS
+↓
+STAAD OUTPUT
+↓
+MEMBER SCHEDULE
+↓
+WEIGHT
+↓
+BOQ
+↓
+ESTIMATE
+
+
+===========================================================
+39. FINAL USER WORKFLOW
+===========================================================
+
+User should only need to enter:
+
+Building Type
+Location
+Length
+Width
+Height
+Roof Slope
+Bay Spacing
+No. of Spans
+Crane ON/OFF
+Crane Capacity
+Crane Span
+Crane Bay
+Crane Rail Level
+Bracing
+Mezzanine
+Canopy
+Loads
+
+Then click:
+
+CALCULATE & GENERATE
+
+The software must automatically generate:
+
+1. Building Geometry
+2. Main Columns
+3. Tapered Columns
+4. Straight Columns
+5. Rafters
+6. Tapered Rafters
+7. Purlins
+8. Girts
+9. Roof Bracing
+10. Wall Bracing
+11. Crane Columns
+12. Crane Runway
+13. Crane Rail
+14. Crane Girder
+15. Base Plates
+16. Anchor Bolts
+17. Connection Plates
+18. Member Schedule
+19. Weight Summary
+20. BOQ
+21. Estimate
+22. Complete STAAD .STD file
+
+
+===========================================================
+40. FINAL STAAD TEST
+===========================================================
+
+The generated .STD file must be tested against the reference structure.
+
+The objective is:
+
+OPEN STAAD.PRO
+↓
+OPEN GENERATED .STD
+↓
+STAAD READS FILE
+↓
+NO SYNTAX ERROR
+↓
+BUILDING MODEL APPEARS
+↓
+ALL COLUMNS APPEAR
+↓
+ALL RAFTERS APPEAR
+↓
+PURLINS APPEAR
+↓
+GIRTS APPEAR
+↓
+ROOF BRACING APPEARS
+↓
+WALL BRACING APPEARS
+↓
+CRANE APPEARS
+↓
+SUPPORTS APPEAR
+↓
+LOADS APPEAR
+↓
+LOAD COMBINATIONS APPEAR
+
+The final .STD file must NOT be a dummy text file.
+
+It must contain actual STAAD geometry and structural commands.
+
+
+===========================================================
+41. REFERENCE FILE COMPATIBILITY
+===========================================================
+
+Use the supplied "Design model 2.STD" as the reference for:
+
+- STAAD syntax
+- Coordinate format
+- Member incidence format
+- Material definition
+- Property definition
+- Support definition
+- Load definition
+- Wind load structure
+- Crane load structure
+- Load combinations
+- Design commands
+- File organization
+
+Do not blindly copy its numerical values.
+
+Only copy the STRUCTURE/SYNTAX/FORMAT.
+
+All numerical values must be generated from the new project inputs.
+
+
+===========================================================
+42. IMPORTANT ENGINEERING DISCLAIMER
+===========================================================
+
+This is a preliminary automated PEB modelling and estimation system.
+
+The generated STAAD model and member sizes must be checked and approved by a qualified structural engineer before construction or issue-for-construction use.
+
+The software must clearly display:
+
+"PRELIMINARY DESIGN / ESTIMATION —
+FINAL STRUCTURAL DESIGN TO BE VERIFIED BY QUALIFIED ENGINEER."
+
+
+===========================================================
+FINAL DELIVERABLE
+===========================================================
+
+Deliver a fully working Excel workbook:
+
+PEB_DESIGN_ESTIMATION_STAAD_GENERATOR.xlsm
+
+with:
+
+PROJECT INPUT
+BUILDING GEOMETRY
+WIND DATA
+DESIGN LOADS
+MAIN FRAME DESIGN
+SECONDARY STEEL
+BRACING
+CRANE
+CONNECTIONS
+BASE PLATE
+MEMBER SCHEDULE
+STAAD OUTPUT
+WEIGHT SUMMARY
+BOQ
+ESTIMATE
+DASHBOARD
+DESIGN BASIS
+LOOKUP DATA
+
+and a working:
+
+GENERATE STAAD MODEL
+EXPORT .STD FILE
+
+button.
+
+The most important requirement:
+
+THE EXCEL WORKBOOK MUST GENERATE A REAL STAAD .STD FILE THAT CAN BE OPENED IN STAAD.PRO AND CREATES THE COMPLETE PEB STRUCTURAL MODEL."
