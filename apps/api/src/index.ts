@@ -12,6 +12,7 @@ import { materialsRouter } from "./modules/materials/materials.controller.js";
 import { sectionsRouter } from "./modules/sections/sections.controller.js";
 import { loadsRouter } from "./modules/loads/loads.controller.js";
 import { designRouter } from "./modules/design/design.controller.js";
+import { validationRouter } from "./modules/validation/validation.controller.js";
 
 const env = loadEnv();
 const app = express();
@@ -42,6 +43,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/projects", projectsRouter);
 app.use("/api/v1/projects/:projectId/loads", loadsRouter);
 app.use("/api/v1/projects/:projectId/design", designRouter);
+app.use("/api/v1/projects/:projectId/validation", validationRouter);
 app.use("/api/v1/materials", materialsRouter);
 app.use("/api/v1/sections", sectionsRouter);
 

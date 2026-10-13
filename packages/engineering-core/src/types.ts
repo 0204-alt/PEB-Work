@@ -201,9 +201,12 @@ export const LoadCaseTypeSchema = z.enum([
 ]);
 
 export const ValidationSeveritySchema = z.enum([
-  "CRITICAL",
+  "ERROR",
   "WARNING",
-  "INFORMATION",
+  "INFO",
+  "REQUIRES_ENGINEERING_REVIEW",
+  "NOT_YET_DEFINED",
+  "UNSUPPORTED"
 ]);
 
 export const StandardRefSchema = z.object({
@@ -462,21 +465,47 @@ export const LoadCombinationSchema = z.object({
   ),
 });
 
-export const ValidationIssueSchema = z.object({
+export const OperationReadinessSchema = z.enum([
+  "READY",
+  "PARTIALLY_READY",
+  "BLOCKED",
+  "NOT_AVAILABLE",
+]);
+
+export const ValidationFindingSchema = z.object({
   id: uuid,
+  runId: uuid,
   severity: ValidationSeveritySchema,
+  category: z.string().min(1),
   code: z.string().min(1),
   message: z.string().min(1),
-  entityType: z.string().optional(),
-  entityId: uuid.optional(),
+  technicalExplanation: z.string().default(""),
+  entityType: z.string().optional().nullable(),
+  entityId: uuid.optional().nullable(),
+  source: z.string().default("ENGINE"),
+  ruleRef: z.string().default(""),
+  blocking: z.boolean().default(false),
+  remediationGuidance: z.string().default(""),
+  createdAt: isoDate,
+  updatedAt: isoDate.optional(),
 });
 
-export const ValidationResultSchema = z.object({
+export const ValidationRunSchema = z.object({
   id: uuid,
   projectId: uuid,
+  modelHash: z.string(),
   exportBlocked: z.boolean(),
-  issues: z.array(ValidationIssueSchema),
+  findings: z.array(ValidationFindingSchema).default([]),
+  gates: z.object({
+    projectSave: OperationReadinessSchema,
+    geometry: OperationReadinessSchema,
+    design: OperationReadinessSchema,
+    analysis: OperationReadinessSchema,
+    staadExport: OperationReadinessSchema,
+    quantity: OperationReadinessSchema,
+  }).optional(),
   createdAt: isoDate,
+  updatedAt: isoDate.optional(),
 });
 
 export const BenchmarkComparisonSchema = z.object({
@@ -682,7 +711,7 @@ export const CanonicalProjectSchema = z.object({
   designRuns: z.array(DesignRunSchema).default([]),
   analysisRuns: z.array(AnalysisRunSchema).default([]),
   staadExportRecords: z.array(StaadExportRecordSchema).default([]),
-  validation: ValidationResultSchema,
+  validationRuns: z.array(ValidationRunSchema).default([]),
   benchmark: BenchmarkComparisonSchema,
   disclaimer: z.string().min(1),
   createdAt: isoDate,
@@ -698,7 +727,9 @@ export type Section = z.infer<typeof SectionSchema>;
 export type Material = z.infer<typeof MaterialSchema>;
 export type LoadCase = z.infer<typeof LoadCaseSchema>;
 export type LoadCombination = z.infer<typeof LoadCombinationSchema>;
-export type ValidationResult = z.infer<typeof ValidationResultSchema>;
+export type ValidationRun = z.infer<typeof ValidationRunSchema>;
+export type ValidationFinding = z.infer<typeof ValidationFindingSchema>;
+export type OperationReadiness = z.infer<typeof OperationReadinessSchema>;
 export type ProjectMetadata = z.infer<typeof ProjectMetadataSchema>;
 export type MemberDesignResult = z.infer<typeof MemberDesignResultSchema>;
 export type CandidateEvaluation = z.infer<typeof CandidateEvaluationSchema>;

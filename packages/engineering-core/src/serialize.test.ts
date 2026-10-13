@@ -24,7 +24,8 @@ describe("canonical project serialize/deserialize", () => {
     expect(restored.geometry.length_m).toBe(175);
     expect(restored.geometry.spans).toHaveLength(1);
     expect(restored.structuralModel.nodes.length).toBeGreaterThan(0);
-    expect(restored.validation.exportBlocked).toBe(true);
+    expect(restored.validationRuns.length).toBe(1);
+    expect(restored.validationRuns[0].exportBlocked).toBe(true);
     expect(restored.benchmark.note).toMatch(/never scale/i);
     expect(restored.disclaimer).toMatch(/PRELIMINARY DESIGN/);
   });

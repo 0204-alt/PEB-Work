@@ -194,28 +194,53 @@ export function createEmptyProject(input: {
     },
     loadCases: [],
     loadCombinations: [],
-    validation: {
-      id: validationId,
-      projectId: id,
-      exportBlocked: true,
-      issues: [
-        {
-          id: createId(),
-          severity: "CRITICAL",
-          code: "MODEL_EMPTY",
-          message:
-            "Structural model has no nodes or members. STAAD export is blocked until geometry generation exists.",
+    validationRuns: [
+      {
+        id: validationId,
+        projectId: id,
+        modelHash: "empty-hash",
+        exportBlocked: true,
+        findings: [
+          {
+            id: createId(),
+            runId: validationId,
+            severity: "ERROR",
+            category: "STAAD",
+            code: "MODEL_EMPTY",
+            message: "Structural model has no nodes or members. STAAD export is blocked until geometry generation exists.",
+            technicalExplanation: "",
+            source: "ENGINE",
+            ruleRef: "",
+            blocking: true,
+            remediationGuidance: "",
+            createdAt: ts,
+          },
+          {
+            id: createId(),
+            runId: validationId,
+            severity: "INFO",
+            category: "SYSTEM",
+            code: "PHASE1_DOMAIN_ONLY",
+            message: "Phase 1 persists the canonical domain. Engineering calculations are not implemented.",
+            technicalExplanation: "",
+            source: "ENGINE",
+            ruleRef: "",
+            blocking: false,
+            remediationGuidance: "",
+            createdAt: ts,
+          }
+        ],
+        gates: {
+          projectSave: "READY",
+          geometry: "READY",
+          design: "READY",
+          analysis: "READY",
+          staadExport: "BLOCKED",
+          quantity: "READY",
         },
-        {
-          id: createId(),
-          severity: "INFORMATION",
-          code: "PHASE1_DOMAIN_ONLY",
-          message:
-            "Phase 1 persists the canonical domain. Engineering calculations are not implemented.",
-        },
-      ],
-      createdAt: ts,
-    },
+        createdAt: ts,
+      }
+    ],
     benchmark: {
       enabled: false,
       note: "Benchmark kg/m² is comparison-only. It must never scale engineering quantities.",

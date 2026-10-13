@@ -2,6 +2,7 @@ import { useState } from "react";
 import { SecondarySteelView } from "./SecondarySteelView";
 import { CraneView } from "./CraneView";
 import { ConnectionsView } from "./ConnectionsView";
+import { ValidationDashboard } from "./ValidationDashboard";
 export function App() {
   const [loading, setLoading] = useState(false);
   const [loadResult, setLoadResult] = useState<any>(null);
@@ -117,6 +118,7 @@ export function App() {
       <SecondarySteelView />
       <CraneView />
       <ConnectionsView />
+      <ValidationDashboard />
     </main>
   );
 }
