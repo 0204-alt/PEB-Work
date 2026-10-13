@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE_URL } from "./config.js";
 
 export function ValidationDashboard() {
   const [projectId, setProjectId] = useState<string>("");
@@ -11,7 +12,7 @@ export function ValidationDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/projects/${projectId}/validation`);
+      const res = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/validation`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to fetch validation");
       setValidationRun(data);
@@ -27,7 +28,7 @@ export function ValidationDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/projects/${projectId}/validation`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/validation`, {
         method: "POST"
       });
       const data = await res.json();

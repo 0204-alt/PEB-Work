@@ -6,13 +6,15 @@ import type {
   CraneConfig,
   LoadCase,
   LoadApplication,
+  Section,
 } from "../types.js";
 
 export function generateCraneLoads(
   craneConfig: CraneConfig,
   geometry: Geometry,
   nodes: Node[],
-  members: Member[]
+  members: Member[],
+  _sections?: Section[]
 ): LoadCase[] {
   const loadCases: LoadCase[] = [];
   

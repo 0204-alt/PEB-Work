@@ -5,8 +5,8 @@ export const validationRouter = Router({ mergeParams: true });
 
 validationRouter.post("/", async (req, res, next) => {
   try {
-    const { projectId } = req.params;
-    const run = await ValidationService.triggerValidation(projectId as string);
+    const { projectId } = req.params as { projectId: string };
+    const run = await ValidationService.triggerValidation(projectId);
     res.json(run);
   } catch (err) {
     next(err);
@@ -15,8 +15,8 @@ validationRouter.post("/", async (req, res, next) => {
 
 validationRouter.get("/", async (req, res, next) => {
   try {
-    const { projectId } = req.params;
-    const run = await ValidationService.getLatestValidation(projectId as string);
+    const { projectId } = req.params as { projectId: string };
+    const run = await ValidationService.getLatestValidation(projectId);
     res.json(run);
   } catch (err) {
     next(err);

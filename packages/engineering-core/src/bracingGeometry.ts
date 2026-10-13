@@ -1,5 +1,6 @@
 import { createId } from "./ids.js";
-import type { Geometry, GeometryResult, Node, Member, BracingConfig } from "./types.js";
+import type { Geometry, Node, Member, BracingConfig } from "./types.js";
+import type { GeometryResult } from "./geometry.js";
 
 export function generateBracing(config: Geometry, geometryWithSecondary: GeometryResult): GeometryResult {
   const nodes = [...geometryWithSecondary.nodes];

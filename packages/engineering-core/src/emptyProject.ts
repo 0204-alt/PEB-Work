@@ -60,7 +60,7 @@ export function createEmptyProject(input: {
     girtConfig: { enabled: true, spacing_m: 2.0, sectionSelectionMode: "AUTO" },
     eaveStrutConfig: { enabled: true, sectionSelectionMode: "AUTO" },
     endWallConfig: { enabled: true, spacing_m: 2.0, sectionSelectionMode: "AUTO" },
-    sagRodConfig: { enabled: true, spacingConfiguration: "MIDSPAN", sectionSelectionMode: "AUTO" },
+    sagRodConfig: { enabled: true, spacingConfiguration: "MIDSPAN" },
     roofBracingConfig: { enabled: true, type: "X", sectionType: "ROD", bays: [0], sectionSelectionMode: "AUTO" },
     wallBracingConfig: { enabled: true, type: "X", sectionType: "ROD", bays: [0], sectionSelectionMode: "AUTO" },
     craneConfig: {
@@ -75,6 +75,7 @@ export function createEmptyProject(input: {
       numberOfWheels: 4,
       wheelSpacing_m: 3.5,
       supplierDataAvailable: false,
+      assumptions: [],
       verticalImpactMethodology: { value: 0.25, source: "Default Assumption", standard: "IS 875", edition: "2015", verified: false },
       transverseMethodology: { value: 0.10, source: "Default Assumption", standard: "IS 875", edition: "2015", verified: false },
       longitudinalMethodology: { value: 0.05, source: "Default Assumption", standard: "IS 875", edition: "2015", verified: false }
@@ -241,6 +242,10 @@ export function createEmptyProject(input: {
         createdAt: ts,
       }
     ],
+    connections: [],
+    designRuns: [],
+    analysisRuns: [],
+    staadExportRecords: [],
     benchmark: {
       enabled: false,
       note: "Benchmark kg/m² is comparison-only. It must never scale engineering quantities.",

@@ -1,4 +1,4 @@
-import { prisma } from "@peb/database";
+import { prisma, MemberType } from "@peb/database";
 import {
   CanonicalProjectSchema,
   assertStructuralInvariants,
@@ -161,7 +161,7 @@ export async function persistCanonicalProject(
           sectionId: member.sectionId,
           materialId: member.materialId,
           label: member.label,
-          type: member.type,
+          type: member.type === "END_WALL_SECONDARY" ? MemberType.GIRT : (member.type as MemberType),
           designGroup: member.designGroup,
           lengthM: member.length_m,
           quantity: member.quantity,
@@ -281,24 +281,34 @@ export async function persistCanonicalProject(
       }
     }
 
-    await tx.validationResult.create({
-      data: {
-        id: parsed.validation.id,
-        projectId: parsed.id,
-        exportBlocked: parsed.validation.exportBlocked,
-        createdAt: new Date(parsed.validation.createdAt),
-        issues: {
-          create: parsed.validation.issues.map((i) => ({
-            id: i.id,
-            severity: i.severity,
-            code: i.code,
-            message: i.message,
-            entityType: i.entityType,
-            entityId: i.entityId,
-          })),
+    for (const vr of parsed.validationRuns) {
+      await tx.validationRun.create({
+        data: {
+          id: vr.id,
+          projectId: parsed.id,
+          modelHash: vr.modelHash,
+          exportBlocked: vr.exportBlocked,
+          createdAt: new Date(vr.createdAt),
+          findings: {
+            create: vr.findings.map((f) => ({
+              id: f.id,
+              severity: f.severity,
+              category: f.category,
+              code: f.code,
+              message: f.message,
+              technicalExplanation: f.technicalExplanation ?? "",
+              entityType: f.entityType ?? null,
+              entityId: f.entityId ?? null,
+              source: f.source ?? "ENGINE",
+              ruleRef: f.ruleRef ?? "",
+              blocking: f.blocking ?? false,
+              remediationGuidance: f.remediationGuidance ?? "",
+              createdAt: new Date(f.createdAt),
+            })),
+          },
         },
-      },
-    });
+      });
+    }
 
     await tx.auditLog.create({
       data: {
@@ -329,12 +339,19 @@ export async function loadCanonicalProject(id: string): Promise<CanonicalProject
       loadCombinations: { include: { factors: true } },
       connections: { include: { components: true } },
       analysisRuns: { include: { memberResults: true, nodeResults: true }, orderBy: { createdAt: "desc" } },
-      validationResults: { include: { issues: true }, orderBy: { createdAt: "desc" }, take: 1 },
+      validationRuns: { include: { findings: true }, orderBy: { createdAt: "desc" } },
+      designRuns: {
+        include: {
+          memberResults: {
+            include: { evaluations: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      staadExportRecords: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!row || !row.designBasis || !row.geometry) return null;
-
-  const validation = row.validationResults[0];
   const document: CanonicalProject = {
     schemaVersion: row.schemaVersion as CanonicalProject["schemaVersion"],
     applicationVersion: row.applicationVersion,
@@ -567,28 +584,84 @@ export async function loadCanonicalProject(id: string): Promise<CanonicalProject
       createdAt: run.createdAt.toISOString(),
       duration_ms: run.durationMs,
     })),
-    validation: validation
-      ? {
-          id: validation.id,
-          projectId: validation.projectId,
-          exportBlocked: validation.exportBlocked,
-          createdAt: validation.createdAt.toISOString(),
-          issues: validation.issues.map((i) => ({
-            id: i.id,
-            severity: i.severity,
-            code: i.code,
-            message: i.message,
-            entityType: i.entityType ?? undefined,
-            entityId: i.entityId ?? undefined,
-          })),
-        }
-      : {
-          id: row.id,
-          projectId: row.id,
-          exportBlocked: true,
-          createdAt: row.createdAt.toISOString(),
-          issues: [],
-        },
+    validationRuns: (row.validationRuns || []).map((vr) => ({
+      id: vr.id,
+      projectId: vr.projectId,
+      modelHash: vr.modelHash,
+      exportBlocked: vr.exportBlocked,
+      findings: vr.findings.map((f) => ({
+        id: f.id,
+        runId: f.runId,
+        severity: f.severity,
+        category: f.category,
+        code: f.code,
+        message: f.message,
+        technicalExplanation: f.technicalExplanation,
+        entityType: f.entityType,
+        entityId: f.entityId,
+        source: f.source,
+        ruleRef: f.ruleRef,
+        blocking: f.blocking,
+        remediationGuidance: f.remediationGuidance,
+        createdAt: f.createdAt.toISOString(),
+        updatedAt: f.updatedAt.toISOString(),
+      })),
+      createdAt: vr.createdAt.toISOString(),
+      updatedAt: vr.updatedAt.toISOString(),
+    })),
+    designRuns: (row.designRuns || []).map((dr) => ({
+      id: dr.id,
+      projectId: dr.projectId,
+      status: dr.status,
+      errors: (dr.errors as string[]) ?? [],
+      warnings: (dr.warnings as string[]) ?? [],
+      memberResults: dr.memberResults.map((mr) => ({
+        id: mr.id,
+        designRunId: mr.designRunId,
+        memberId: mr.memberId,
+        sectionId: mr.sectionId ?? undefined,
+        materialId: mr.materialId ?? undefined,
+        governingLoadCaseId: mr.governingLoadCaseId ?? undefined,
+        axialDemand: mr.axialDemand ?? undefined,
+        axialResistance: mr.axialResistance ?? undefined,
+        bendingDemand: mr.bendingDemand ?? undefined,
+        bendingResistance: mr.bendingResistance ?? undefined,
+        shearDemand: mr.shearDemand ?? undefined,
+        shearResistance: mr.shearResistance ?? undefined,
+        utilization: mr.utilization ?? undefined,
+        slenderness: mr.slenderness ?? undefined,
+        status: mr.status,
+        warnings: (mr.warnings as Record<string, unknown>) ?? undefined,
+        evaluations: mr.evaluations.map((ev) => ({
+          id: ev.id,
+          memberDesignResultId: ev.memberDesignResultId,
+          sectionId: ev.sectionId,
+          status: ev.status,
+          governingCheck: ev.governingCheck,
+          utilization: ev.utilization ?? undefined,
+          failureReason: ev.failureReason ?? undefined,
+          rank: ev.rank,
+          createdAt: ev.createdAt.toISOString(),
+          updatedAt: ev.updatedAt.toISOString(),
+        })),
+        createdAt: mr.createdAt.toISOString(),
+        updatedAt: mr.updatedAt.toISOString(),
+      })),
+      createdAt: dr.createdAt.toISOString(),
+      updatedAt: dr.updatedAt.toISOString(),
+    })),
+    staadExportRecords: (row.staadExportRecords || []).map((sr) => ({
+      id: sr.id,
+      projectId: sr.projectId,
+      modelHash: sr.modelHash,
+      serializerVersion: sr.serializerVersion,
+      status: sr.status as any,
+      warnings: (sr.warnings as string[]) ?? [],
+      errors: (sr.errors as string[]) ?? [],
+      referenceAvailable: sr.referenceAvailable,
+      staadVersionVerified: sr.staadVersionVerified,
+      createdAt: sr.createdAt.toISOString(),
+    })),
     benchmark: (row.benchmark ?? {
       enabled: false,
       note: "Benchmark kg/m² is comparison-only. It must never scale engineering quantities.",

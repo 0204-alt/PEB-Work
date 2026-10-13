@@ -17,8 +17,31 @@ export interface ValidationContext {
 
 export type ValidatorFunc = (ctx: ValidationContext) => void;
 
-export function addFinding(ctx: ValidationContext, finding: Omit<ValidationFinding, "id" | "runId" | "createdAt">) {
+export type FindingInput = Omit<
+  ValidationFinding,
+  | "id"
+  | "runId"
+  | "createdAt"
+  | "technicalExplanation"
+  | "source"
+  | "ruleRef"
+  | "blocking"
+  | "remediationGuidance"
+> & {
+  technicalExplanation?: string;
+  source?: string;
+  ruleRef?: string;
+  blocking?: boolean;
+  remediationGuidance?: string;
+};
+
+export function addFinding(ctx: ValidationContext, finding: FindingInput) {
   ctx.findings.push({
+    source: "ENGINE",
+    technicalExplanation: "",
+    ruleRef: "",
+    blocking: false,
+    remediationGuidance: "",
     ...finding,
     id: createId(),
     runId: ctx.runId,

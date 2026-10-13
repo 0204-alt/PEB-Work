@@ -40,7 +40,8 @@ export function calculateSecondaryDemand(member: Member, loadCases: LoadCase[], 
       loadCaseId: lc.id,
       axial_kN: 0,
       moment_kNm: moment,
-      shear_kN: shear
+      shear_kN: shear,
+      source: "SIMPLIFIED_BEAM_THEORY",
     });
   }
   

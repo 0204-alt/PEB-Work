@@ -85,8 +85,8 @@ export const CraneConfigSchema = z.object({
     clause: z.string().optional(),
     verified: z.boolean().default(false),
   }).optional(),
-  supplierDataAvailable: z.boolean().default(false),
-  assumptions: z.array(z.string()).default([]),
+  supplierDataAvailable: z.boolean().optional().default(false),
+  assumptions: z.array(z.string()).optional().default([]),
 });
 
 export const MezzanineConfigSchema = z.object({
@@ -208,6 +208,7 @@ export const ValidationSeveritySchema = z.enum([
   "NOT_YET_DEFINED",
   "UNSUPPORTED"
 ]);
+export type ValidationSeverity = z.infer<typeof ValidationSeveritySchema>;
 
 export const StandardRefSchema = z.object({
   id: uuid,
@@ -286,7 +287,7 @@ export const GeometrySchema = z.object({
   roofSlopeRiseRun: z.string().min(1),
   baySpacing_m: z.number().positive().optional(),
   numberOfBays: z.number().int().positive().optional(),
-  unequalFinalBay: z.boolean().default(false),
+  unequalFinalBay: z.boolean().optional().default(false),
   gridLines: z.array(GridLineSchema),
   bays: z.array(BaySchema),
   spans: z.array(SpanSchema),
@@ -300,7 +301,7 @@ export const GeometrySchema = z.object({
   sagRodConfig: SagRodConfigSchema.optional(),
   roofBracingConfig: BracingConfigSchema.optional(),
   wallBracingConfig: BracingConfigSchema.optional(),
-  notes: z.array(z.string()).default([]),
+  notes: z.array(z.string()).optional().default([]),
   createdAt: isoDate,
   updatedAt: isoDate,
 });
@@ -315,7 +316,7 @@ export const NodeSchema = z.object({
   role: NodeRoleSchema,
   gridLineId: uuid.optional(),
   bayId: uuid.optional(),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.unknown()).optional().default({}),
 });
 
 export const MaterialSchema = z.object({
@@ -376,7 +377,7 @@ export const SectionSchema = z.object({
   ry_mm: z.number().nonnegative().optional(),
   unitMass_kgpm: z.number().nonnegative(),
   materialId: uuid.optional(),
-  geometryNotes: z.string().default(""),
+  geometryNotes: z.string().optional().default(""),
   geometryConfig: SectionGeometryConfigSchema.optional(),
   catalogVersion: z.string().min(1),
   source: z.string().min(1),
@@ -415,13 +416,13 @@ export const MemberSchema = z.object({
   endNodeId: uuid,
   sectionId: uuid.optional(),
   materialId: uuid.optional(),
-  designGroup: z.string().default(""),
+  designGroup: z.string().optional().default(""),
   length_m: z.number().nonnegative(),
-  quantity: z.number().positive().default(1),
+  quantity: z.number().positive().optional().default(1),
   unitMass_kgpm: z.number().nonnegative().optional(),
   totalWeight_kg: z.number().nonnegative().optional(),
-  weightStatus: CalculationStatusSchema.default("NOT_IMPLEMENTED"),
-  metadata: z.record(z.unknown()).default({}),
+  weightStatus: CalculationStatusSchema.optional().default("NOT_IMPLEMENTED"),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 export const LoadApplicationSchema = z.object({
@@ -434,8 +435,8 @@ export const LoadApplicationSchema = z.object({
   units: z.string().min(1),
   source: z.string().min(1),
   designBasisRef: z.string().min(1),
-  description: z.string().default(""),
-  metadata: z.record(z.unknown()).default({}),
+  description: z.string().optional().default(""),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 export const LoadCaseSchema = z.object({
@@ -446,8 +447,8 @@ export const LoadCaseSchema = z.object({
   source: z.string().min(1),
   designBasisId: uuid,
   status: CalculationStatusSchema,
-  applications: z.array(LoadApplicationSchema).default([]),
-  metadata: z.record(z.unknown()).default({}),
+  applications: z.array(LoadApplicationSchema).optional().default([]),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 export const LoadCombinationSchema = z.object({
@@ -747,5 +748,7 @@ export type GridLine = z.infer<typeof GridLineSchema>;
 export type Bay = z.infer<typeof BaySchema>;
 export type Span = z.infer<typeof SpanSchema>;
 export type BracingConfig = z.infer<typeof BracingConfigSchema>;
+export type CraneConfig = z.infer<typeof CraneConfigSchema>;
+export type LoadApplication = z.infer<typeof LoadApplicationSchema>;
 
 export { APPLICATION_VERSION, PROJECT_SCHEMA_VERSION };

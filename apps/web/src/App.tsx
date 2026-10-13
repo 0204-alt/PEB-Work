@@ -3,6 +3,8 @@ import { SecondarySteelView } from "./SecondarySteelView";
 import { CraneView } from "./CraneView";
 import { ConnectionsView } from "./ConnectionsView";
 import { ValidationDashboard } from "./ValidationDashboard";
+import { API_BASE_URL } from "./config.js";
+
 export function App() {
   const [loading, setLoading] = useState(false);
   const [loadResult, setLoadResult] = useState<any>(null);
@@ -16,7 +18,7 @@ export function App() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/projects/${projectId}/loads/generate`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/loads/generate`, {
         method: "POST",
       });
       const json = await res.json();

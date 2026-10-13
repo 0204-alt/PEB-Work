@@ -6,6 +6,8 @@ describe("Crane Geometry Generation", () => {
   it("generates no crane geometry if craneEnabled is false", () => {
     const config: CraneConfig = {
       craneEnabled: false,
+      supplierDataAvailable: false,
+      assumptions: [],
     };
     const nodes: Node[] = [];
     const members: Member[] = [];
@@ -21,21 +23,23 @@ describe("Crane Geometry Generation", () => {
       craneEnabled: true,
       craneId: "CR-01",
       runwayElevation_m: 6,
+      supplierDataAvailable: false,
+      assumptions: [],
     };
     
     const geom = { projectId: "proj-1" } as Geometry;
     const nodes: Node[] = [
-      { id: "n1", projectId: "proj-1", label: "N1", x_m: 0, y_m: 0, z_m: 0, role: "SUPPORT" },
-      { id: "n2", projectId: "proj-1", label: "N2", x_m: 0, y_m: 0, z_m: 20, role: "SUPPORT" },
-      { id: "n3", projectId: "proj-1", label: "N3", x_m: 6, y_m: 0, z_m: 0, role: "SUPPORT" },
-      { id: "n4", projectId: "proj-1", label: "N4", x_m: 6, y_m: 0, z_m: 20, role: "SUPPORT" },
+      { id: "n1", projectId: "proj-1", label: "N1", x_m: 0, y_m: 0, z_m: 0, role: "BASE", metadata: {} },
+      { id: "n2", projectId: "proj-1", label: "N2", x_m: 0, y_m: 0, z_m: 20, role: "BASE", metadata: {} },
+      { id: "n3", projectId: "proj-1", label: "N3", x_m: 6, y_m: 0, z_m: 0, role: "BASE", metadata: {} },
+      { id: "n4", projectId: "proj-1", label: "N4", x_m: 6, y_m: 0, z_m: 20, role: "BASE", metadata: {} },
     ];
     
     const members: Member[] = [
-      { id: "m1", projectId: "proj-1", label: "C1", type: "COLUMN", startNodeId: "n1", endNodeId: "n_top1", length_m: 8, quantity: 1, weightStatus: "NOT_IMPLEMENTED" },
-      { id: "m2", projectId: "proj-1", label: "C2", type: "COLUMN", startNodeId: "n2", endNodeId: "n_top2", length_m: 8, quantity: 1, weightStatus: "NOT_IMPLEMENTED" },
-      { id: "m3", projectId: "proj-1", label: "C3", type: "COLUMN", startNodeId: "n3", endNodeId: "n_top3", length_m: 8, quantity: 1, weightStatus: "NOT_IMPLEMENTED" },
-      { id: "m4", projectId: "proj-1", label: "C4", type: "COLUMN", startNodeId: "n4", endNodeId: "n_top4", length_m: 8, quantity: 1, weightStatus: "NOT_IMPLEMENTED" },
+      { id: "m1", projectId: "proj-1", label: "C1", type: "COLUMN", startNodeId: "n1", endNodeId: "n_top1", length_m: 8, quantity: 1, weightStatus: "NOT_IMPLEMENTED", designGroup: "" },
+      { id: "m2", projectId: "proj-1", label: "C2", type: "COLUMN", startNodeId: "n2", endNodeId: "n_top2", length_m: 8, quantity: 1, weightStatus: "NOT_IMPLEMENTED", designGroup: "" },
+      { id: "m3", projectId: "proj-1", label: "C3", type: "COLUMN", startNodeId: "n3", endNodeId: "n_top3", length_m: 8, quantity: 1, weightStatus: "NOT_IMPLEMENTED", designGroup: "" },
+      { id: "m4", projectId: "proj-1", label: "C4", type: "COLUMN", startNodeId: "n4", endNodeId: "n_top4", length_m: 8, quantity: 1, weightStatus: "NOT_IMPLEMENTED", designGroup: "" },
     ];
     
     generateCraneGeometry(config, geom, nodes, members);

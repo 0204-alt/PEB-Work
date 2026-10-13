@@ -25,7 +25,8 @@ describe("secondary steel design engine", () => {
         type: "LIVE", // simulated pressure 0.57 kN/m2
         description: "Roof Live",
         source: "USER",
-        status: "PRELIMINARY"
+        status: "PRELIMINARY",
+        applications: [],
       }
     ];
 
@@ -54,7 +55,7 @@ describe("secondary steel design engine", () => {
     };
 
     const demands: DesignDemand[] = [
-      { loadCaseId: "lc-1", axial_kN: 0, moment_kNm: 5.0, shear_kN: 3.0 }
+      { loadCaseId: "lc-1", axial_kN: 0, moment_kNm: 5.0, shear_kN: 3.0, source: "TEST" }
     ];
 
     const section: Section = {
@@ -70,12 +71,12 @@ describe("secondary steel design engine", () => {
       rx_mm: 80,
       ry_mm: 20,
       catalogVersion: "1.0",
-      source: "USER"
+      source: "USER",
+      geometryNotes: "",
     };
 
     const material: Material = {
       id: "mat-1",
-      projectId: "p-1",
       name: "ColdFormed",
       grade: "Yst310",
       fy_MPa: 310,

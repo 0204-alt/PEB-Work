@@ -5,7 +5,7 @@ import { createId } from "../ids";
 
 describe("Crane Loads Generation", () => {
   it("generates no loads if craneEnabled is false", () => {
-    const config: CraneConfig = { craneEnabled: false };
+    const config: CraneConfig = { craneEnabled: false, supplierDataAvailable: false, assumptions: [] };
     const loadCases = generateCraneLoads(config, {} as Geometry, [], [], []);
     expect(loadCases.length).toBe(0);
   });
@@ -19,6 +19,8 @@ describe("Crane Loads Generation", () => {
       trolleyWeight_kN: 5,
       craneSpan_m: 20,
       numberOfWheels: 4,
+      supplierDataAvailable: false,
+      assumptions: [],
       // intentionally missing methodologies
     };
     
@@ -45,6 +47,8 @@ describe("Crane Loads Generation", () => {
       verticalImpactMethodology: { value: 0.25, source: "Client Specs", standard: "IS 875", edition: "2015", verified: true },
       transverseMethodology: { value: 0.15, source: "Client Specs", standard: "IS 875", edition: "2015", verified: true },
       longitudinalMethodology: { value: 0.07, source: "Client Specs", standard: "IS 875", edition: "2015", verified: true },
+      supplierDataAvailable: false,
+      assumptions: [],
     };
     
     const geom = { projectId: "proj-1" } as Geometry;

@@ -54,10 +54,14 @@ export function computeAnalysisHash(project: CanonicalProject): string {
       id: m.id, startNodeId: m.startNodeId, endNodeId: m.endNodeId, type: m.type, 
       sectionId: m.sectionId, materialId: m.materialId, isTensionOnly: m.metadata?.isTensionOnly 
     })),
-    sections: sections.map(s => ({ id: s.id, type: s.type, dimensions: s.dimensions })),
-    materials: materials.map(m => ({ id: m.id, type: m.type, yieldStrength_MPa: m.yieldStrength_MPa })),
-    supports: supports.map(s => ({ nodeId: s.nodeId, tx: s.tx, ty: s.ty, tz: s.tz, rx: s.rx, ry: s.ry, rz: s.rz })),
-    releases: releases.map(r => ({ memberId: r.memberId, end: r.end, tx: r.tx, ty: r.ty, tz: r.tz, rx: r.rx, ry: r.ry, rz: r.rz })),
+    sections: sections.map(s => ({ id: s.id, family: s.family, designation: s.designation, area: s.area_mm2, ix: s.Ix_mm4, iy: s.Iy_mm4, geometryConfig: s.geometryConfig })),
+    materials: materials.map(m => ({ id: m.id, name: m.name, grade: m.grade, fy: m.fy_MPa, fu: m.fu_MPa, e: m.E_MPa })),
+    supports: supports.map(s => ({ nodeId: s.nodeId, type: s.type })),
+    releases: releases.map(r => ({ 
+      memberId: r.memberId, 
+      startFx: r.startFx, startFy: r.startFy, startFz: r.startFz, startMx: r.startMx, startMy: r.startMy, startMz: r.startMz,
+      endFx: r.endFx, endFy: r.endFy, endFz: r.endFz, endMx: r.endMx, endMy: r.endMy, endMz: r.endMz 
+    })),
     loadCases: loadCases.map(lc => ({ 
       id: lc.id, type: lc.type,
       applications: [...lc.applications].sort((a, b) => a.id.localeCompare(b.id)).map(a => ({

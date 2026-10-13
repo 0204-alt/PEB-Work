@@ -1,11 +1,11 @@
-import { db } from "@peb/database";
-import { validateProject } from "@peb/engineering-core";
-import { ProjectService } from "../projects/projects.service.js";
+import { prisma } from "@peb/database";
+import { validateProject, ValidationFinding } from "@peb/engineering-core";
+import { loadCanonicalProject } from "../projects/project.repository.js";
 import { HttpError } from "../../httpError.js";
 
 export class ValidationService {
   static async triggerValidation(projectId: string) {
-    const project = await ProjectService.getProject(projectId);
+    const project = await loadCanonicalProject(projectId);
     if (!project) {
       throw new HttpError(404, "Project not found");
     }
@@ -13,27 +13,26 @@ export class ValidationService {
     const run = validateProject(project);
 
     // Persist to database
-    await db.validationRun.create({
+    await prisma.validationRun.create({
       data: {
         id: run.id,
         projectId: run.projectId,
         modelHash: run.modelHash,
         exportBlocked: run.exportBlocked,
-        gates: run.gates as object,
         findings: {
-          create: run.findings.map(f => ({
+          create: run.findings.map((f: ValidationFinding) => ({
             id: f.id,
             severity: f.severity,
             category: f.category,
             code: f.code,
             message: f.message,
-            technicalExplanation: f.technicalExplanation,
-            entityType: f.entityType,
-            entityId: f.entityId,
-            source: f.source,
-            ruleRef: f.ruleRef,
-            blocking: f.blocking,
-            remediationGuidance: f.remediationGuidance,
+            technicalExplanation: f.technicalExplanation ?? "",
+            entityType: f.entityType ?? null,
+            entityId: f.entityId ?? null,
+            source: f.source ?? "ENGINE",
+            ruleRef: f.ruleRef ?? "",
+            blocking: f.blocking ?? false,
+            remediationGuidance: f.remediationGuidance ?? "",
           }))
         }
       }
@@ -43,7 +42,7 @@ export class ValidationService {
   }
 
   static async getLatestValidation(projectId: string) {
-    const run = await db.validationRun.findFirst({
+    const run = await prisma.validationRun.findFirst({
       where: { projectId },
       orderBy: { createdAt: "desc" },
       include: { findings: true }

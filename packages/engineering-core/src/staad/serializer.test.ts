@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { generateStaadExport } from "./serializer.js";
-import { CanonicalProject } from "../types.js";
+import { CanonicalProject, PROJECT_SCHEMA_VERSION, APPLICATION_VERSION } from "../types.js";
 
 const minimalValidProject: CanonicalProject = {
   id: "test-proj",
-  schemaVersion: "0.1.0",
-  applicationVersion: "0.1.0",
+  schemaVersion: PROJECT_SCHEMA_VERSION,
+  applicationVersion: APPLICATION_VERSION,
   metadata: {
     name: "Test Project",
     client: "Client A",
@@ -25,8 +25,12 @@ const minimalValidProject: CanonicalProject = {
     bays: [],
     spans: [],
     craneConfig: {
-      craneEnabled: true
+      craneEnabled: true,
+      supplierDataAvailable: false,
+      assumptions: [],
     },
+    notes: [],
+    unequalFinalBay: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -52,6 +56,7 @@ const minimalValidProject: CanonicalProject = {
       unitMass_kgpm: 50,
       catalogVersion: "1",
       source: "user",
+      geometryNotes: "",
       area_mm2: 5000,
       Ix_mm4: 100000000,
       Iy_mm4: 20000000,
@@ -72,6 +77,7 @@ const minimalValidProject: CanonicalProject = {
       unitMass_kgpm: 60,
       catalogVersion: "1",
       source: "user",
+      geometryNotes: "",
       geometryConfig: {
         type: "TAPERED",
         startDepth_mm: 300,
@@ -87,8 +93,8 @@ const minimalValidProject: CanonicalProject = {
   ],
   structuralModel: {
     nodes: [
-      { id: "n1", projectId: "test-proj", label: "N1", x_m: 0, y_m: 0, z_m: 0, role: "BASE" },
-      { id: "n2", projectId: "test-proj", label: "N2", x_m: 0, y_m: 5, z_m: 0, role: "EAVE" },
+      { id: "n1", projectId: "test-proj", label: "N1", x_m: 0, y_m: 0, z_m: 0, role: "BASE", metadata: {} },
+      { id: "n2", projectId: "test-proj", label: "N2", x_m: 0, y_m: 5, z_m: 0, role: "EAVE", metadata: {} },
     ],
     members: [
       {
@@ -101,7 +107,10 @@ const minimalValidProject: CanonicalProject = {
         sectionId: "sec1",
         materialId: "mat1",
         length_m: 5,
-        designGroup: "C1"
+        designGroup: "C1",
+        quantity: 1,
+        weightStatus: "VALIDATED_INTERNAL",
+        metadata: {}
       }
     ],
     supports: [
@@ -115,7 +124,7 @@ const minimalValidProject: CanonicalProject = {
   designRuns: [],
   analysisRuns: [],
   staadExportRecords: [],
-  validation: {} as any,
+  validationRuns: [],
   benchmark: {} as any,
   disclaimer: "test",
   createdAt: new Date().toISOString(),
@@ -166,13 +175,17 @@ describe("STAAD Serializer", () => {
       sectionId: "sec1",
       materialId: "mat1",
       length_m: 5,
-      designGroup: "CR1"
+      designGroup: "CR1",
+      quantity: 1,
+      weightStatus: "VALIDATED_INTERNAL",
+      metadata: {}
     });
     
     proj.loadCases.push({
       id: "lc1", projectId: "test-proj", type: "CRANE", description: "Crane",
       source: "user", designBasisId: "db1", status: "VALIDATED_INTERNAL",
-      applications: []
+      applications: [],
+      metadata: {}
     });
 
     const result = generateStaadExport(proj);

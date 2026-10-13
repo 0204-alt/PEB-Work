@@ -11,7 +11,7 @@ describe("API domain contract", () => {
       width_m: 20,
       eaveHeight_m: 8,
     });
-    expect(project.validation.exportBlocked).toBe(true);
+    expect(project.validationRuns[0].exportBlocked).toBe(true);
     expect(deserializeProject(serializeProject(project)).id).toBe(project.id);
   });
 });

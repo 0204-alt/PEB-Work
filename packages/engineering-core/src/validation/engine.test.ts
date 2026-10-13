@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { PROJECT_SCHEMA_VERSION } from "@peb/shared";
 import { validateProject } from "./engine.js";
 import { CanonicalProject, ValidationRun } from "../types.js";
 import { createId } from "../ids.js";
@@ -6,7 +7,7 @@ import { createId } from "../ids.js";
 function getMinimalProject(): CanonicalProject {
   const projectId = createId();
   return {
-    schemaVersion: 1,
+    schemaVersion: PROJECT_SCHEMA_VERSION,
     applicationVersion: "1.0.0",
     id: projectId,
     metadata: {
@@ -64,8 +65,12 @@ function getMinimalProject(): CanonicalProject {
       spans: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      notes: [],
+      unequalFinalBay: false,
       craneConfig: {
         craneEnabled: false,
+        supplierDataAvailable: false,
+        assumptions: [],
       },
     },
     materials: [
@@ -89,6 +94,7 @@ function getMinimalProject(): CanonicalProject {
         designation: "IPE 300",
         unitMass_kgpm: 42.2,
         area_mm2: 5380,
+        geometryNotes: "",
         source: "Catalog",
         catalogVersion: "1.0",
         geometryConfig: {
@@ -289,6 +295,7 @@ describe("Validation Engine", () => {
       designation: "TAP 1",
       unitMass_kgpm: 50,
       area_mm2: 6000,
+      geometryNotes: "",
       source: "User",
       catalogVersion: "1.0",
       geometryConfig: {

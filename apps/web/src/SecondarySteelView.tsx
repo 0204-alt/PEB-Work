@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE_URL } from "./config.js";
 
 export function SecondarySteelView() {
   const [loading, setLoading] = useState(false);
@@ -12,7 +13,7 @@ export function SecondarySteelView() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/projects/${projectId}/design/execute`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/design/execute`, {
         method: "POST",
       });
       const json = await res.json();
@@ -20,7 +21,7 @@ export function SecondarySteelView() {
         throw new Error(json.error || "Failed to execute design run");
       }
       
-      const res2 = await fetch(`http://localhost:3000/api/v1/projects/${projectId}/design/results`);
+      const res2 = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/design/results`);
       const json2 = await res2.json();
       if (json2.data) {
         setDesignRun(json2.data);

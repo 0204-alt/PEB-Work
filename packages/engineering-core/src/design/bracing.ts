@@ -7,7 +7,8 @@ import type {
   MemberDesignResult,
   CandidateEvaluation
 } from "../types.js";
-import { checkAxialResistance, checkSlenderness } from "./engine.js";
+import { checkAxialResistance } from "./axial.js";
+import { checkSlenderness } from "./slenderness.js";
 
 export function designBracingMember(
   member: Member,

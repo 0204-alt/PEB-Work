@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { type CanonicalProject } from "@peb/engineering-core/src/types";
+import { type CanonicalProject, type Connection, type ConnectionComponent } from "@peb/engineering-core";
+import { API_BASE_URL } from "./config.js";
 
 export function ConnectionsView() {
   const [project, setProject] = useState<CanonicalProject | null>(null);
@@ -13,7 +14,7 @@ export function ConnectionsView() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/projects/${projectId}`);
+      const res = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}`);
       const json = await res.json();
       if (!res.ok) {
         throw new Error(json.error || "Failed to fetch project");
@@ -58,9 +59,9 @@ export function ConnectionsView() {
               </tr>
             </thead>
             <tbody>
-              {project.connections?.map((conn) => {
-                const verifiedQty = conn.components?.filter(c => c.status === "VERIFIED").length || 0;
-                const prelimQty = conn.components?.filter(c => c.status === "PRELIMINARY").length || 0;
+              {project.connections?.map((conn: Connection) => {
+                const verifiedQty = conn.components?.filter((c: ConnectionComponent) => c.status === "VERIFIED").length || 0;
+                const prelimQty = conn.components?.filter((c: ConnectionComponent) => c.status === "PRELIMINARY").length || 0;
                 return (
                   <tr key={conn.id}>
                     <td>{conn.type}</td>

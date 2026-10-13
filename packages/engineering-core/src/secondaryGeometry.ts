@@ -1,5 +1,6 @@
 import { createId } from "./ids.js";
-import type { Geometry, GeometryResult, Node, Member } from "./types.js";
+import type { Geometry, Node, Member } from "./types.js";
+import type { GeometryResult } from "./geometry.js";
 
 export function generateSecondarySteel(config: Geometry, primaryGeometry: GeometryResult): GeometryResult {
   const nodes = [...primaryGeometry.nodes];
@@ -66,7 +67,8 @@ function generateEaveStruts(config: Geometry, primaryGeometry: GeometryResult, n
         designGroup: "Eave Struts",
         length_m: length,
         quantity: 1,
-        weightStatus: "NOT_IMPLEMENTED"
+        weightStatus: "NOT_IMPLEMENTED",
+        metadata: {}
       });
     }
   }
@@ -168,7 +170,8 @@ function generatePurlins(config: Geometry, primaryGeometry: GeometryResult, node
           designGroup: "Purlins",
           length_m: px2 - px1,
           quantity: 1,
-          weightStatus: "NOT_IMPLEMENTED"
+          weightStatus: "NOT_IMPLEMENTED",
+          metadata: {}
         });
       }
     }
@@ -264,7 +267,8 @@ function generateGirts(config: Geometry, primaryGeometry: GeometryResult, nodes:
           designGroup: "Side Wall Girts",
           length_m: px2 - px1,
           quantity: 1,
-          weightStatus: "NOT_IMPLEMENTED"
+          weightStatus: "NOT_IMPLEMENTED",
+          metadata: {}
         });
       }
     }
@@ -364,7 +368,8 @@ function generateEndWallSecondary(config: Geometry, primaryGeometry: GeometryRes
           designGroup: "End Wall Girts",
           length_m: pz2 - pz1,
           quantity: 1,
-          weightStatus: "NOT_IMPLEMENTED"
+          weightStatus: "NOT_IMPLEMENTED",
+          metadata: {}
         });
       }
     }
